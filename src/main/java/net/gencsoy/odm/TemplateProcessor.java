@@ -17,7 +17,7 @@ public class TemplateProcessor {
         ClassLoaderTemplateResolver templateResolver = new ClassLoaderTemplateResolver(getClass().getClassLoader());
         templateResolver.setPrefix("templates/");
         templateResolver.setSuffix(".tmpl");
-        templateResolver.setTemplateMode(TemplateMode.TEXT);
+        templateResolver.setTemplateMode(TemplateMode.JAVASCRIPT);
         templateResolver.setCacheable(false);
         templateEngine = new TemplateEngine();
         templateEngine.setTemplateResolver(templateResolver);

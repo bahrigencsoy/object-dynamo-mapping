@@ -1,0 +1,7 @@
+[# th:each="attribute : ${item.allAttributes}"]
+        [(${attribute.javaType})] _[(${attribute.attribute})] = null;
+        if (map.containsKey("[(${attribute.name})]")) {
+            _[(${attribute.attribute})] = map.get("[(${attribute.name})]").[(${attribute.builder})]();
+        }
+[/]
+        var obj = new [(${item.name})]( [# th:insert="~{all-attributes-no-types}"][/] );

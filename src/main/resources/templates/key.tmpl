@@ -1,0 +1,4 @@
+Map.of(
+  "[(${item.table.partitionKey.name})]", AttributeValue.builder().[(${item.table.partitionKey.builder})]([(${item.table.partitionKey.attribute})]).build(),
+  "[(${item.table.sortKey.name})]", AttributeValue.builder().[(${item.table.sortKey.builder})]([(${item.table.sortKey.attribute})]).build()
+)

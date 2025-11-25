@@ -1,13 +1,25 @@
 package [(${project.packageName})];
 
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
+import software.amazon.awssdk.services.dynamodb.model.*;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 public class [(${item.name})] {
 [# th:each="attribute : ${item.allAttributes}"]
     private [(${attribute.javaType})] [(${attribute.attribute})];
 [/]
+    private transient DynamoDbClient _client;
 
-    [(${item.name})]([# th:each="attribute, iterStat : ${item.allAttributes}"] [(${attribute.javaType})] [(${attribute.attribute})][(${iterStat.last}?'':',')][/] )
+    [(${item.name})]([# th:insert="~{all-attributes-types}"][/] )
     {[# th:each="attribute : ${item.allAttributes}"]
         this.[(${attribute.attribute})] = [(${attribute.attribute})];[/]
     }
@@ -17,5 +29,91 @@ public class [(${item.name})] {
     }
 
 [/]
+
+    void _setClient(DynamoDbClient client) {
+        this._client = client;
+    }
+
+    public Mutator mutator() {
+        var key = [# th:insert="~{key}"][/];
+        return new Mutator(_client, key);
+    }
+
+    private abstract static class FieldMutator {
+        abstract void accept(Map<String,AttributeValueUpdate> updatedValues);
+    }
+
+    public static class StringFieldMutator extends FieldMutator {
+        private final String attribute;
+        private final Mutator parent;
+        private boolean delete = false;
+        private String value;
+
+        public StringFieldMutator(String dynamoAttribute, Mutator parent) {
+            this.attribute = dynamoAttribute;
+            this.parent = parent;
+        }
+        public Mutator setValue(String value) {
+            this.value = value;
+            return parent;
+        }
+        public Mutator delete() {
+            this.delete = true;
+            return parent;
+        }
+
+        @Override
+        void accept(Map<String,AttributeValueUpdate> updatedValues) {
+            if (delete) {
+                updatedValues.put(attribute, AttributeValueUpdate.builder()
+                                    .action(AttributeAction.DELETE)
+                                    .build());
+            } else {
+                updatedValues.put(attribute, AttributeValueUpdate.builder()
+                                    .value(AttributeValue.builder().s(value).build())
+                                    .action(AttributeAction.PUT)
+                                    .build());
+            }
+        }
+    }
+
+
+    public static class Mutator {
+
+        private List<FieldMutator> mutators = new ArrayList<>();
+        private DynamoDbClient client;
+        private Map<String, AttributeValue> key;
+
+        Mutator(DynamoDbClient client, Map<String, AttributeValue> key) {
+            this.client = client;
+            this.key = key;
+        }
+
+[# th:each="attribute : ${item.attributes}"]
+        [(${attribute.javaType})]FieldMutator [(${attribute.attribute})]() {
+            var mutator = new [(${attribute.javaType})]FieldMutator( "[(${attribute.attribute})]", this );
+            mutators.add(mutator);
+            return mutator;
+        }
+[/]
+
+        public [(${item.name})] update() {
+             HashMap<String,AttributeValueUpdate> updatedValues = new HashMap<>();
+             for (var mutator:mutators) {
+                mutator.accept(updatedValues);
+             }
+             var updateItemRequest = UpdateItemRequest.builder().
+                                     key(key)
+                                     .tableName("[(${item.table.name})]")
+                                     .attributeUpdates(updatedValues)
+                                     .returnValues(ReturnValue.ALL_NEW)
+                                     .build();
+             var response = client.updateItem(updateItemRequest);
+             var map = response.attributes();
+[# th:insert="~{construct-object}"][/]
+              obj._setClient(client);
+              return obj;
+        }
+    }
 
 }

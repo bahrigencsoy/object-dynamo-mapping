@@ -1,15 +1,10 @@
 package [(${project.packageName})];
 
-import software.amazon.awssdk.core.sync.RequestBody;
-import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
 import software.amazon.awssdk.services.dynamodb.model.*;
-import software.amazon.awssdk.services.s3.S3Client;
-import software.amazon.awssdk.services.s3.model.PutObjectRequest;
-import software.amazon.awssdk.services.s3.presigner.S3Presigner;
-import software.amazon.awssdk.services.s3.presigner.model.GetObjectPresignRequest;
 
 import java.util.Map;
+import java.util.HashMap;
 
 public class [(${project.factoryClass})] {
 
@@ -19,14 +14,41 @@ public class [(${project.factoryClass})] {
         this.client = client;
     }
 [# th:each="item : ${project.allItems}"]
-     public [(${item.name})] query[(${item.name})]([# th:each="attribute, iterStat : ${item.table.keyAttributes}"] [(${attribute.javaType})] [(${attribute.attribute})][(${iterStat.last}?'':',')][/] )
+    public [(${item.name})] put[(${item.name})]( [# th:insert="~{all-attributes-types}"][/] )
+    {
+        if ([(${item.table.partitionKey.attribute})] == null) {
+            throw new NullPointerException("Partition key \"[(${item.table.partitionKey.name})]\" is null");
+        }
+        if ([(${item.table.sortKey.attribute})] == null) {
+            throw new NullPointerException("Sort key \"[(${item.table.sortKey.name})]\" is null");
+        }
+
+        Map<String, AttributeValue> map = new HashMap<>([# th:insert="~{key}"][/]);
+[# th:each="attribute : ${item.attributes}"]
+        if ([(${attribute.attribute})] != null) {
+            map.put("[(${attribute.name})]", AttributeValue.builder().[(${attribute.builder})]([(${attribute.attribute})]).build());
+        }
+[/]
+        PutItemRequest putItemRequest = PutItemRequest.builder()
+                            .tableName("[(${item.table.name})]")
+                            .item(map)
+                            .returnValues(ReturnValue.ALL_OLD)
+                            .build();
+        var response = client.putItem(putItemRequest);
+        if (response.hasAttributes()) {
+            // FIXME
+            System.out.println(response);
+        }
+[# th:insert="~{construct-object}"][/]
+        obj._setClient(client);
+        return obj;
+    }
+
+     public [(${item.name})] query[(${item.name})]( [# th:insert="~{key-attributes-types}"][/] )
      {
         GetItemRequest getItemRequest = GetItemRequest.builder()
                                             .tableName("[(${item.table.name})]")
-                                            .key(Map.of(
-                                                "[(${item.table.partitionKey.name})]", AttributeValue.builder().[(${item.table.partitionKey.builder})]([(${item.table.partitionKey.attribute})]).build(),
-                                                "[(${item.table.sortKey.name})]", AttributeValue.builder().[(${item.table.sortKey.builder})]([(${item.table.sortKey.attribute})]).build()
-                                            ))
+                                            .key([# th:insert="~{key}"][/])
                                         .build();
 
         GetItemResponse result = client.getItem(getItemRequest);
@@ -35,13 +57,9 @@ public class [(${project.factoryClass})] {
             return null;
         }
         Map<String, AttributeValue> map = result.item();
-[# th:each="attribute : ${item.allAttributes}"]
-        [(${attribute.javaType})] _[(${attribute.attribute})] = null;
-        if (map.containsKey("[(${attribute.name})]")) {
-            _[(${attribute.attribute})] = map.get("[(${attribute.name})]").[(${attribute.builder})]();
-        }
-[/]
-        return new [(${item.name})]([# th:each="attribute, iterStat : ${item.allAttributes}"] _[(${attribute.attribute})][(${iterStat.last}?'':',')][/] );
+[# th:insert="~{construct-object}"][/]
+        obj._setClient(client);
+        return obj;
      }
 [/]
 }
