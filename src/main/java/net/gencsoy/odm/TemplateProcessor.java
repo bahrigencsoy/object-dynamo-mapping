@@ -1,5 +1,6 @@
 package net.gencsoy.odm;
 
+import net.gencsoy.odm.inputmodel.OdmProject;
 import org.thymeleaf.TemplateEngine;
 import org.thymeleaf.context.Context;
 import org.thymeleaf.templatemode.TemplateMode;
@@ -28,7 +29,11 @@ public class TemplateProcessor {
         ctxt.setVariable("items", Arrays.asList("aaa", "bbb", "ccc"));
         String hello = processor.templateEngine.process("Factory.java", ctxt);
         System.out.println(hello);
+    }
 
-
+    public String processFactoryClass(OdmProject project) {
+        var context = new Context();
+        context.setVariable("project", project);
+        return templateEngine.process("Factory.java", context);
     }
 }

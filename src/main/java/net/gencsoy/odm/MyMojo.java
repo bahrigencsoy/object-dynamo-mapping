@@ -9,12 +9,9 @@ import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
-import org.thymeleaf.TemplateEngine;
-import org.thymeleaf.context.EngineContext;
-import org.thymeleaf.context.ITemplateContext;
-import org.thymeleaf.templateresolver.ClassLoaderTemplateResolver;
 
 import java.io.*;
+import java.nio.file.Files;
 
 /**
  * Goal which touches a timestamp file.
@@ -61,25 +58,21 @@ public class MyMojo
         }
 
 
+        var splitted = projectDef.getPackageName().split("\\.");
+        File packageDirectory = outputDirectory;
+        for (String dir : splitted) {
+            File dirChild = new File(packageDirectory, dir);
+            dirChild.mkdir();
+            packageDirectory = dirChild;
+        }
 
+        TemplateProcessor templateProcessor = new TemplateProcessor();
+        String factoryClassContents = templateProcessor.processFactoryClass(projectDef);
 
-        File touch = new File(f, "touch.txt");
-
-        FileWriter w = null;
         try {
-            w = new FileWriter(touch);
-
-            w.write("touch.txt");
+            Files.writeString(packageDirectory.toPath().resolve(projectDef.getFactoryClass() + ".java"), factoryClassContents);
         } catch (IOException e) {
-            throw new MojoExecutionException("Error creating file " + touch, e);
-        } finally {
-            if (w != null) {
-                try {
-                    w.close();
-                } catch (IOException e) {
-                    // ignore
-                }
-            }
+            throw new MojoExecutionException("Error creating file ", e);
         }
     }
 }

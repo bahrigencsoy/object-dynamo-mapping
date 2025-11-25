@@ -34,20 +34,11 @@ public class MyMojoTest {
         assertNotNull(outputDirectory);
         assertTrue(outputDirectory.exists());
 
-        File touch = new File(outputDirectory, "touch.txt");
+        File touch = new File(outputDirectory, "my/test/TestsObjectsFactory.java");
         assertTrue(touch.exists());
 
         File expectedOutputDirectory = new File("target/test-harness/project-to-test").getAbsoluteFile();
         assertEquals(expectedOutputDirectory, outputDirectory);
-    }
-
-    /**
-     * Do not need the MojoRule.
-     */
-    @WithoutMojo
-    @Test
-    public void testSomethingWhichDoesNotNeedTheMojoAndProbablyShouldBeExtractedIntoANewClassOfItsOwn() {
-        assertTrue(true);
     }
 
 }
