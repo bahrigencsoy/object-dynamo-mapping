@@ -16,13 +16,13 @@ import java.nio.file.Files;
 /**
  * Goal which touches a timestamp file.
  */
-@Mojo(name = "touch", defaultPhase = LifecyclePhase.PROCESS_SOURCES)
+@Mojo(name = "touch", defaultPhase = LifecyclePhase.GENERATE_SOURCES)
 public class MyMojo
         extends AbstractMojo {
     /**
      * Location of the file.
      */
-    @Parameter(defaultValue = "${project.build.directory}", property = "outputDir", required = true)
+    @Parameter(defaultValue = "${project.build.directory}/generated-sources/odm", property = "outputDir", required = true)
     private File outputDirectory;
 
     @Parameter(property = "inputModel", required = true)
