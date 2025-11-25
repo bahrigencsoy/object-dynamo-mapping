@@ -1,4 +1,12 @@
 package [(${project.packageName})];
 
+import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
+
 public class [(${project.factoryClass})] {
+
+    private final DynamoDbClient client;
+
+    public [(${project.factoryClass})](DynamoDbClient client) {
+        this.client = client;
+    }
 }

@@ -3,15 +3,23 @@ package net.gencsoy.odm;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.gson.Gson;
+import net.gencsoy.odm.expandedmodel.ExtendedDynamoAttribute;
+import net.gencsoy.odm.expandedmodel.ExtendedDynamoItem;
+import net.gencsoy.odm.inputmodel.DynamoAttribute;
+import net.gencsoy.odm.inputmodel.DynamoItem;
+import net.gencsoy.odm.inputmodel.DynamoTable;
 import net.gencsoy.odm.inputmodel.OdmProject;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
+import org.modelmapper.ModelMapper;
 
 import java.io.*;
 import java.nio.file.Files;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Goal which touches a timestamp file.
@@ -67,12 +75,34 @@ public class MyMojo
         }
 
         TemplateProcessor templateProcessor = new TemplateProcessor();
-        String factoryClassContents = templateProcessor.processFactoryClass(projectDef);
 
         try {
+            String factoryClassContents = templateProcessor.processFactoryClass(projectDef);
             Files.writeString(packageDirectory.toPath().resolve(projectDef.getFactoryClass() + ".java"), factoryClassContents);
         } catch (IOException e) {
-            throw new MojoExecutionException("Error creating file ", e);
+            throw new MojoExecutionException("Error creating factory ", e);
+        }
+
+        try {
+            ModelMapper modelMapper = new ModelMapper();
+            for (DynamoTable table : projectDef.getTables()) {
+                for (DynamoItem item : table.getItems()) {
+                    ExtendedDynamoItem extendItem = modelMapper.map(item, ExtendedDynamoItem.class);
+                    List<? extends DynamoAttribute> originalAttributes = extendItem.getAttributes();
+                    List<ExtendedDynamoAttribute> extendedAtributes = new ArrayList<>();
+                    extendedAtributes.add(modelMapper.map(table.getPartitionKey(), ExtendedDynamoAttribute.class));
+                    extendedAtributes.add(modelMapper.map(table.getSortKey(), ExtendedDynamoAttribute.class));
+                    for (DynamoAttribute attribute:originalAttributes){
+                        extendedAtributes.add(modelMapper.map(attribute, ExtendedDynamoAttribute.class));
+                    }
+                    extendItem.setAttributes(extendedAtributes);
+
+                    String itemContents = templateProcessor.processItem(projectDef, extendItem);
+                    Files.writeString(packageDirectory.toPath().resolve(extendItem.getName() + ".java"), itemContents);
+                }
+            }
+        } catch (IOException e) {
+            throw new MojoExecutionException("Error creating item ", e);
         }
     }
 }

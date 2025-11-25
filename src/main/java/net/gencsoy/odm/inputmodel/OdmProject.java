@@ -1,9 +1,20 @@
 package net.gencsoy.odm.inputmodel;
 
+import java.util.List;
+
 public class OdmProject {
     private String version;
     private String packageName;
     private String factoryClass;
+    private List<DynamoTable> tables;
+
+    public List<DynamoTable> getTables() {
+        return tables;
+    }
+
+    public void setTables(List<DynamoTable> tables) {
+        this.tables = tables;
+    }
 
     public String getVersion() {
         return version;

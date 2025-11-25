@@ -2,7 +2,16 @@ package net.gencsoy.odm.inputmodel;
 
 public class DynamoAttribute {
     private String name;
+    private String attribute;
     private DynamoColumnType type;
+
+    public String getAttribute() {
+        return attribute;
+    }
+
+    public void setAttribute(String attribute) {
+        this.attribute = attribute;
+    }
 
     public String getName() {
         return name;

@@ -1,0 +1,21 @@
+package [(${project.packageName})];
+
+import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
+
+public class [(${item.name})] {
+[# th:each="attribute : ${item.attributes}"]
+    private [(${attribute.javaType})] [(${attribute.attribute})];
+[/]
+
+    [(${item.name})]([# th:each="attribute, iterStat : ${item.attributes}"] [(${attribute.javaType})] [(${attribute.attribute})][(${iterStat.last}?'':',')][/] )
+    {[# th:each="attribute : ${item.attributes}"]
+        this.[(${attribute.attribute})] = [(${attribute.attribute})];[/]
+    }
+[# th:each="attribute : ${item.attributes}"]
+    public [(${attribute.javaType})] get[(${#strings.capitalizeWords(attribute.attribute)})]() {
+        return [(${attribute.attribute})];
+    }
+
+[/]
+
+}
