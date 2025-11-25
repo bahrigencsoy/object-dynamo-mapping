@@ -5,7 +5,7 @@ import java.util.List;
 
 public class DynamoItem {
     private String name;
-    private List<? extends DynamoAttribute> attributes = new ArrayList<>();
+    private List<DynamoAttribute> attributes = new ArrayList<>();
 
     public String getName() {
         return name;
@@ -15,11 +15,11 @@ public class DynamoItem {
         this.name = name;
     }
 
-    public List<? extends DynamoAttribute> getAttributes() {
+    public List<DynamoAttribute> getAttributes() {
         return attributes;
     }
 
-    public void setAttributes(List<? extends DynamoAttribute> attributes) {
+    public void setAttributes(List<DynamoAttribute> attributes) {
         this.attributes = attributes;
     }
 }

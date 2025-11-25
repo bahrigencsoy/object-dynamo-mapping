@@ -1,12 +1,13 @@
 package net.gencsoy.odm.inputmodel;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class DynamoTable {
-    private String tableName;
+    private String name;
     private DynamoAttribute partitionKey;
     private DynamoAttribute sortKey;
-    private List<DynamoItem> items;
+    private List<DynamoItem> items = new ArrayList<>();
 
     public DynamoAttribute getPartitionKey() {
         return partitionKey;
@@ -24,12 +25,12 @@ public class DynamoTable {
         this.sortKey = sortKey;
     }
 
-    public String getTableName() {
-        return tableName;
+    public String getName() {
+        return name;
     }
 
-    public void setTableName(String tableName) {
-        this.tableName = tableName;
+    public void setName(String tableName) {
+        this.name = tableName;
     }
 
     public List<DynamoItem> getItems() {

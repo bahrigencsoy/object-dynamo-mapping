@@ -5,7 +5,8 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.gson.Gson;
 import net.gencsoy.odm.expandedmodel.ExtendedDynamoAttribute;
 import net.gencsoy.odm.expandedmodel.ExtendedDynamoItem;
-import net.gencsoy.odm.inputmodel.DynamoAttribute;
+import net.gencsoy.odm.expandedmodel.ExtendedDynamoTable;
+import net.gencsoy.odm.expandedmodel.ExtendedOdmProject;
 import net.gencsoy.odm.inputmodel.DynamoItem;
 import net.gencsoy.odm.inputmodel.DynamoTable;
 import net.gencsoy.odm.inputmodel.OdmProject;
@@ -20,6 +21,7 @@ import java.io.*;
 import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Consumer;
 
 /**
  * Goal which touches a timestamp file.
@@ -36,9 +38,23 @@ public class MyMojo
     @Parameter(property = "inputModel", required = true)
     private File inputModel;
 
+    private ModelMapper modelMapper = new ModelMapper();
+
     @VisibleForTesting
     File getOutputDirectory() {
         return outputDirectory;
+    }
+
+    private <T, V extends T> void mapListItems(List<T> list, Class<V> targetClass, Consumer<V> customizer) {
+        List<T> clone = new ArrayList<>(list);
+        list.clear();
+        for (T original : clone) {
+            V copy = modelMapper.map(original, targetClass);
+            if (customizer != null) {
+                customizer.accept(copy);
+            }
+            list.add(copy);
+        }
     }
 
     public void execute()
@@ -57,16 +73,32 @@ public class MyMojo
             throw new MojoExecutionException("Input Model does not exist");
         }
 
-        OdmProject projectDef;
+        OdmProject projectDefOriginal;
 
         try (BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(inputModel)))) {
-            projectDef = new Gson().fromJson(reader, OdmProject.class);
+            projectDefOriginal = new Gson().fromJson(reader, OdmProject.class);
         } catch (IOException ex) {
             throw new MojoExecutionException(ex);
         }
 
+        ExtendedOdmProject extendProject = modelMapper.map(projectDefOriginal, ExtendedOdmProject.class);
 
-        var splitted = projectDef.getPackageName().split("\\.");
+        mapListItems(extendProject.getTables(), ExtendedDynamoTable.class, new Consumer<ExtendedDynamoTable>() {
+            @Override
+            public void accept(ExtendedDynamoTable dynamoTable) {
+                dynamoTable.setPartitionKey(modelMapper.map(dynamoTable.getPartitionKey(), ExtendedDynamoAttribute.class));
+                dynamoTable.setSortKey(modelMapper.map(dynamoTable.getSortKey(), ExtendedDynamoAttribute.class));
+                mapListItems(dynamoTable.getItems(), ExtendedDynamoItem.class, new Consumer<ExtendedDynamoItem>() {
+                    @Override
+                    public void accept(ExtendedDynamoItem extendedDynamoItem) {
+                        extendedDynamoItem.setTable(dynamoTable);
+                        mapListItems(extendedDynamoItem.getAttributes(), ExtendedDynamoAttribute.class, null);
+                    }
+                });
+            }
+        });
+
+        var splitted = extendProject.getPackageName().split("\\.");
         File packageDirectory = outputDirectory;
         for (String dir : splitted) {
             File dirChild = new File(packageDirectory, dir);
@@ -77,28 +109,18 @@ public class MyMojo
         TemplateProcessor templateProcessor = new TemplateProcessor();
 
         try {
-            String factoryClassContents = templateProcessor.processFactoryClass(projectDef);
-            Files.writeString(packageDirectory.toPath().resolve(projectDef.getFactoryClass() + ".java"), factoryClassContents);
+            String factoryClassContents = templateProcessor.processFactoryClass(extendProject);
+            Files.writeString(packageDirectory.toPath().resolve(extendProject.getFactoryClass() + ".java"), factoryClassContents);
         } catch (IOException e) {
             throw new MojoExecutionException("Error creating factory ", e);
         }
 
         try {
-            ModelMapper modelMapper = new ModelMapper();
-            for (DynamoTable table : projectDef.getTables()) {
-                for (DynamoItem item : table.getItems()) {
-                    ExtendedDynamoItem extendItem = modelMapper.map(item, ExtendedDynamoItem.class);
-                    List<? extends DynamoAttribute> originalAttributes = extendItem.getAttributes();
-                    List<ExtendedDynamoAttribute> extendedAtributes = new ArrayList<>();
-                    extendedAtributes.add(modelMapper.map(table.getPartitionKey(), ExtendedDynamoAttribute.class));
-                    extendedAtributes.add(modelMapper.map(table.getSortKey(), ExtendedDynamoAttribute.class));
-                    for (DynamoAttribute attribute:originalAttributes){
-                        extendedAtributes.add(modelMapper.map(attribute, ExtendedDynamoAttribute.class));
-                    }
-                    extendItem.setAttributes(extendedAtributes);
 
-                    String itemContents = templateProcessor.processItem(projectDef, extendItem);
-                    Files.writeString(packageDirectory.toPath().resolve(extendItem.getName() + ".java"), itemContents);
+            for (DynamoTable table : extendProject.getTables()) {
+                for (DynamoItem item : table.getItems()) {
+                    String itemContents = templateProcessor.processItem(extendProject, (ExtendedDynamoItem) item);
+                    Files.writeString(packageDirectory.toPath().resolve(item.getName() + ".java"), itemContents);
                 }
             }
         } catch (IOException e) {
