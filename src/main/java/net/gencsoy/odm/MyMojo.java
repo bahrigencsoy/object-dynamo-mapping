@@ -9,6 +9,10 @@ import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
+import org.thymeleaf.TemplateEngine;
+import org.thymeleaf.context.EngineContext;
+import org.thymeleaf.context.ITemplateContext;
+import org.thymeleaf.templateresolver.ClassLoaderTemplateResolver;
 
 import java.io.*;
 
@@ -55,6 +59,9 @@ public class MyMojo
         } catch (IOException ex) {
             throw new MojoExecutionException(ex);
         }
+
+
+
 
         File touch = new File(f, "touch.txt");
 
