@@ -1,12 +1,13 @@
 package net.gencsoy.odm.inputmodel;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class OdmProject {
     private String version;
     private String packageName;
     private String factoryClass;
-    private List<DynamoTable> tables;
+    private List<DynamoTable> tables = new ArrayList<>();
 
     public List<DynamoTable> getTables() {
         return tables;

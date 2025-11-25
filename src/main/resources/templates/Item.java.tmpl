@@ -90,8 +90,8 @@ public class [(${item.name})] {
         }
 
 [# th:each="attribute : ${item.attributes}"]
-        [(${attribute.javaType})]FieldMutator [(${attribute.attribute})]() {
-            var mutator = new [(${attribute.javaType})]FieldMutator( "[(${attribute.attribute})]", this );
+        public [(${attribute.javaType})]FieldMutator [(${attribute.attribute})]() {
+            var mutator = new [(${attribute.javaType})]FieldMutator( "[(${attribute.name})]", this );
             mutators.add(mutator);
             return mutator;
         }

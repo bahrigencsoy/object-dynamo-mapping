@@ -5,6 +5,7 @@ import software.amazon.awssdk.services.dynamodb.model.*;
 
 import java.util.Map;
 import java.util.HashMap;
+import java.util.Optional;
 
 public class [(${project.factoryClass})] {
 
@@ -14,6 +15,11 @@ public class [(${project.factoryClass})] {
         this.client = client;
     }
 [# th:each="item : ${project.allItems}"]
+    private static [(${item.name})] __construct[(${item.name})](Map<String, AttributeValue> map) {
+        [# th:insert="~{construct-object}"][/]
+        return obj;
+    }
+
     public [(${item.name})] put[(${item.name})]( [# th:insert="~{all-attributes-types}"][/] )
     {
         if ([(${item.table.partitionKey.attribute})] == null) {
@@ -36,15 +42,16 @@ public class [(${project.factoryClass})] {
                             .build();
         var response = client.putItem(putItemRequest);
         if (response.hasAttributes()) {
-            // FIXME
-            System.out.println(response);
+            // FIXME this means that there was a previous object with same key
+            // don't know what to do
+            var previousObject = __construct[(${item.name})](response.attributes());
         }
-[# th:insert="~{construct-object}"][/]
+        var obj = __construct[(${item.name})](map);
         obj._setClient(client);
         return obj;
     }
 
-     public [(${item.name})] query[(${item.name})]( [# th:insert="~{key-attributes-types}"][/] )
+     public Optional<[(${item.name})]> query[(${item.name})]( [# th:insert="~{key-attributes-types}"][/] )
      {
         GetItemRequest getItemRequest = GetItemRequest.builder()
                                             .tableName("[(${item.table.name})]")
@@ -54,12 +61,12 @@ public class [(${project.factoryClass})] {
         GetItemResponse result = client.getItem(getItemRequest);
 
         if (result.item().isEmpty()) {
-            return null;
+            return Optional.empty();
         }
         Map<String, AttributeValue> map = result.item();
-[# th:insert="~{construct-object}"][/]
+        var obj = __construct[(${item.name})](map);
         obj._setClient(client);
-        return obj;
+        return Optional.of(obj);
      }
 [/]
 }
