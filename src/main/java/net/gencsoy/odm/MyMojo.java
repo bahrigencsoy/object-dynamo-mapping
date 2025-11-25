@@ -1,6 +1,7 @@
 package net.gencsoy.odm;
 
 
+import com.google.common.annotations.VisibleForTesting;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
 
@@ -24,6 +25,11 @@ public class MyMojo
      */
     @Parameter( defaultValue = "${project.build.directory}", property = "outputDir", required = true )
     private File outputDirectory;
+
+    @VisibleForTesting
+    File getOutputDirectory() {
+        return outputDirectory;
+    }
 
     public void execute()
         throws MojoExecutionException
