@@ -1,0 +1,5 @@
+{
+  "version": "0.1",
+  "packageName": "my.test",
+  "factoryClass": "TestsObjectsFactory"
+}

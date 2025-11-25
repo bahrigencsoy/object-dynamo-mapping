@@ -2,6 +2,7 @@ package net.gencsoy.odm;
 
 
 import org.apache.maven.api.plugin.testing.InjectMojo;
+import org.apache.maven.api.plugin.testing.MojoParameter;
 import org.apache.maven.api.plugin.testing.MojoTest;
 import org.apache.maven.plugin.testing.WithoutMojo;
 import org.junit.jupiter.api.Test;
@@ -19,6 +20,7 @@ public class MyMojoTest {
      */
     @Test
     @InjectMojo(goal = "touch", pom = "src/test/resources/project-to-test/pom.xml")
+    @MojoParameter(name = "inputModel", value = "src/test/resources/project-to-test/model.json")
     public void testSomething(MyMojo myMojo)
             throws Exception {
         File pom = new File("target/test-classes/project-to-test/");
