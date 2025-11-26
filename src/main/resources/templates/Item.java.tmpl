@@ -64,7 +64,7 @@ public class [(${item.name})] {
 
 [# th:each="attribute : ${item.attributes}"]
         public GenericMutator<[(${attribute.javaType})], Mutator> [(${attribute.attribute})]() {
-            var mutator = new GenericMutator<>("[(${attribute.name})]", this, (BiFunction<AttributeValue.Builder, [(${attribute.javaType})], AttributeValue.Builder>) (builder, s) -> builder.[(${attribute.converter})](s));
+            var mutator = new GenericMutator<>("[(${attribute.name})]", this, AttributeValue.Builder::[(${attribute.converter})]);
             mutators.add(mutator);
             return mutator;
         }
