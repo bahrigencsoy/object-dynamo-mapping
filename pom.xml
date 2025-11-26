@@ -12,8 +12,7 @@
 
     <name>odm Maven Plugin</name>
 
-    <!-- FIXME change it to the project's website -->
-    <url>http://www.example.com</url>
+    <url>https://github.com/bahrigencsoy/object-dynamo-mapping</url>
 
     <prerequisites>
         <maven>${maven.version}</maven>
