@@ -15,12 +15,24 @@ import com.example.GameScoreEntityManager;
 
 public class Usage {
 
-    void testCompile(){
-        GameScoreEntityManager em = new GameScoreEntityManager(null);
+    GameScoreEntityManager em;
 
-        GameScore score = em.putGameScore("aa", "bbb", null);
+    void initializeEntityManager() {
+        // You need to supply valid DynamoDbClient instance
+        em = new GameScoreEntityManager(null /* replace */);
+    }
 
-        score.mutator().totalScore().setValue("111").commit();
+    void insertEntity(){
+
+        GameScore score = em.putGameScore("user_10", "Another World", null);
+    }
+
+    void queryAndUpdateEntity() {
+        GameScore score = em.queryGameScore("user_10", "Another World").get();
+
+        score.mutator()
+                .totalScore().setValue("123")
+                .commit();
     }
 }
 ```
