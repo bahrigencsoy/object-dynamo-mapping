@@ -14,7 +14,7 @@
         <plugins>
             <plugin>
                 <groupId>net.gencsoy.odm</groupId>
-                <artifactId>odm</artifactId>
+                <artifactId>odm-maven-plugin</artifactId>
                 <configuration>
                     <!-- Specify the MyMojo parameter -->
                     <outputDirectory>target/test-harness/project-to-test</outputDirectory>

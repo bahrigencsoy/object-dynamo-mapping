@@ -1,68 +1,3 @@
-Building with a self smoke test:
-
-```shell
-mvn clean test && mvn test-compile -Pproject-test && mvn clean install -DskipTests
-```
-
-### Usage
-
-[See the code](./src/projecttest/java/projectest/Usage.java)
-```java
-package projectest;
-
-import com.example.GameScore;
-import com.example.GameScoreEntityManager;
-
-public class Usage {
-
-    void testCompile(){
-        GameScoreEntityManager em = new GameScoreEntityManager(null);
-
-        GameScore score = em.putGameScore("aa", "bbb", null);
-
-        score.mutator().totalScore().setValue("111");
-    }
-}
-```
-
-[See the input json](./src/test/resources/project-to-test/model.json)
-```json
-{
-  "version": "0.2",
-  "packageName": "com.example",
-  "factoryClass": "GameScoreEntityManager",
-  "tables": [
-    {
-      "name": "games_scores_odm_test",
-      "partitionKey": {
-        "name": "user_id",
-        "type": "STRING",
-        "attribute": "userId"
-      },
-      "sortKey": {
-        "name": "game_title",
-        "type": "STRING",
-        "attribute": "gameTitle"
-      },
-      "items": [
-        {
-          "name": "GameScore",
-          "attributes": [
-            {
-              "name": "total_score",
-              "type": "STRING",
-              "attribute": "totalScore"
-            }
-          ]
-        }
-      ]
-    }
-  ]
-}
-```
-
-[See the sample Maven pom](./src/projecttest/java/projectest/pom.xml)
-```xml
 <?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0"
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
@@ -132,4 +67,3 @@ public class Usage {
         </plugins>
     </build>
 </project>
-```

@@ -3,7 +3,7 @@ package projectest;
 import com.example.GameScore;
 import com.example.GameScoreEntityManager;
 
-public class TestingCompile {
+public class Usage {
 
     void testCompile(){
         GameScoreEntityManager em = new GameScoreEntityManager(null);
