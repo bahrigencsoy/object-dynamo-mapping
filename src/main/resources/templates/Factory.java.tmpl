@@ -7,6 +7,8 @@ import java.util.Map;
 import java.util.HashMap;
 import java.util.Optional;
 
+import static [(${project.packageName})].lib.*;
+
 public class [(${project.factoryClass})] {
 
     private final DynamoDbClient client;
@@ -71,19 +73,4 @@ public class [(${project.factoryClass})] {
         return Optional.of(obj);
      }
 [/]
-     private static String __l(Long val) {
-        return Long.toString(val);
-     }
-
-     private static Long __lx(String val) {
-         return Long.parseLong(val);
-     }
-
-     private static String __s(String val) {
-        return val;
-     }
-
-     private static String __sx(String val) {
-         return val;
-     }
 }

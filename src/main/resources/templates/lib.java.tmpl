@@ -1,0 +1,67 @@
+package [(${project.packageName})];
+
+import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
+import software.amazon.awssdk.services.dynamodb.model.*;
+
+import java.util.Map;
+import java.util.HashMap;
+import java.util.Optional;
+
+class lib {
+
+    static String __l(Long val) {
+        return Long.toString(val);
+    }
+
+    static Long __lx(String val) {
+        return Long.parseLong(val);
+    }
+
+    static String __s(String val) {
+        return val;
+    }
+
+    static String __sx(String val) {
+        return val;
+    }
+
+    public static class StringFieldMutator extends lib.FieldMutator {
+        private final String attribute;
+        private final GameScore.Mutator parent;
+        private boolean delete = false;
+        private String value;
+
+        public StringFieldMutator(String dynamoAttribute, GameScore.Mutator parent) {
+            this.attribute = dynamoAttribute;
+            this.parent = parent;
+        }
+
+        public GameScore.Mutator setValue(String value) {
+            this.value = value;
+            return parent;
+        }
+
+        public GameScore.Mutator delete() {
+            this.delete = true;
+            return parent;
+        }
+
+        @Override
+        void accept(Map<String, AttributeValueUpdate> updatedValues) {
+            if (delete) {
+                updatedValues.put(attribute, AttributeValueUpdate.builder()
+                        .action(AttributeAction.DELETE)
+                        .build());
+            } else {
+                updatedValues.put(attribute, AttributeValueUpdate.builder()
+                        .value(AttributeValue.builder().s(value).build())
+                        .action(AttributeAction.PUT)
+                        .build());
+            }
+        }
+    }
+
+    abstract static class FieldMutator {
+        abstract void accept(Map<String, AttributeValueUpdate> updatedValues);
+    }
+}

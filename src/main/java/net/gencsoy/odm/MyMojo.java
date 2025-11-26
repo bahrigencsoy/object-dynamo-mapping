@@ -116,7 +116,13 @@ public class MyMojo
         }
 
         try {
+            String libClassContents = templateProcessor.processLibClass(extendProject);
+            Files.writeString(packageDirectory.toPath().resolve("lib.java"), libClassContents);
+        } catch (IOException e) {
+            throw new MojoExecutionException("Error creating factory ", e);
+        }
 
+        try {
             for (DynamoTable table : extendProject.getTables()) {
                 for (DynamoItem item : table.getItems()) {
                     String itemContents = templateProcessor.processItem(extendProject, (ExtendedDynamoItem) item);

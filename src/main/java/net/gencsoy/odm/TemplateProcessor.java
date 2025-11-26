@@ -38,6 +38,12 @@ public class TemplateProcessor {
         return templateEngine.process("Factory.java", context);
     }
 
+    public String processLibClass(OdmProject project) {
+        var context = new Context();
+        context.setVariable("project", project);
+        return templateEngine.process("lib.java", context);
+    }
+
     public String processItem(OdmProject project, ExtendedDynamoItem item) {
         var context = new Context();
         context.setVariable("project", project);

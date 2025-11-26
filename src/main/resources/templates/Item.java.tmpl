@@ -13,6 +13,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import static [(${project.packageName})].lib.*;
+
 public class [(${item.name})] {
 [# th:each="attribute : ${item.allAttributes}"]
     private [(${attribute.javaType})] [(${attribute.attribute})];
@@ -38,45 +40,6 @@ public class [(${item.name})] {
         var key = [# th:insert="~{key}"][/];
         return new Mutator(_client, key);
     }
-
-    private abstract static class FieldMutator {
-        abstract void accept(Map<String,AttributeValueUpdate> updatedValues);
-    }
-
-    public static class StringFieldMutator extends FieldMutator {
-        private final String attribute;
-        private final Mutator parent;
-        private boolean delete = false;
-        private String value;
-
-        public StringFieldMutator(String dynamoAttribute, Mutator parent) {
-            this.attribute = dynamoAttribute;
-            this.parent = parent;
-        }
-        public Mutator setValue(String value) {
-            this.value = value;
-            return parent;
-        }
-        public Mutator delete() {
-            this.delete = true;
-            return parent;
-        }
-
-        @Override
-        void accept(Map<String,AttributeValueUpdate> updatedValues) {
-            if (delete) {
-                updatedValues.put(attribute, AttributeValueUpdate.builder()
-                                    .action(AttributeAction.DELETE)
-                                    .build());
-            } else {
-                updatedValues.put(attribute, AttributeValueUpdate.builder()
-                                    .value(AttributeValue.builder().s(value).build())
-                                    .action(AttributeAction.PUT)
-                                    .build());
-            }
-        }
-    }
-
 
     public static class Mutator {
 
@@ -115,20 +78,4 @@ public class [(${item.name})] {
               return obj;
         }
     }
-
-     private static String __l(Long val) {
-        return Long.toString(val);
-     }
-
-     private static Long __lx(String val) {
-         return Long.parseLong(val);
-     }
-
-     private static String __s(String val) {
-        return val;
-     }
-
-     private static String __sx(String val) {
-         return val;
-     }
 }

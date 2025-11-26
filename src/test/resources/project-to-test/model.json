@@ -21,7 +21,7 @@
           "attributes": [
             {
               "name": "total_score",
-              "type": "NUMBER",
+              "type": "STRING",
               "attribute": "totalScore"
             }
           ]
