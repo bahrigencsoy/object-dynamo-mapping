@@ -60,7 +60,7 @@ public class [(${item.name})] {
         }
 [/]
 
-        public [(${item.name})] update() {
+        public [(${item.name})] commit() {
              HashMap<String,AttributeValueUpdate> updatedValues = new HashMap<>();
              for (var mutator:mutators) {
                 mutator.accept(updatedValues);

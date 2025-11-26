@@ -20,7 +20,7 @@ public class Usage {
 
         GameScore score = em.putGameScore("aa", "bbb", null);
 
-        score.mutator().totalScore().setValue("111");
+        score.mutator().totalScore().setValue("111").commit();
     }
 }
 ```
