@@ -4,6 +4,15 @@ public class DynamoAttribute {
     private String name;
     private String attribute;
     private DynamoColumnType type;
+    private String javaType;
+
+    public String getJavaType() {
+        return javaType;
+    }
+
+    public void setJavaType(String javaType) {
+        this.javaType = javaType;
+    }
 
     public String getAttribute() {
         return attribute;

@@ -1,5 +1,32 @@
 {
-  "version": "0.1",
-  "packageName": "my.test",
-  "factoryClass": "TestsObjectsFactory"
+  "version": "0.2",
+  "packageName": "com.example",
+  "factoryClass": "GameScoreEntityManager",
+  "tables": [
+    {
+      "name": "games_scores_odm_test",
+      "partitionKey": {
+        "name": "user_id",
+        "type": "STRING",
+        "attribute": "userId"
+      },
+      "sortKey": {
+        "name": "game_title",
+        "type": "STRING",
+        "attribute": "gameTitle"
+      },
+      "items": [
+        {
+          "name": "GameScore",
+          "attributes": [
+            {
+              "name": "total_score",
+              "type": "NUMBER",
+              "attribute": "totalScore"
+            }
+          ]
+        }
+      ]
+    }
+  ]
 }

@@ -32,7 +32,9 @@ public class [(${project.factoryClass})] {
         Map<String, AttributeValue> map = new HashMap<>([# th:insert="~{key}"][/]);
 [# th:each="attribute : ${item.attributes}"]
         if ([(${attribute.attribute})] != null) {
-            map.put("[(${attribute.name})]", AttributeValue.builder().[(${attribute.builder})]([(${attribute.attribute})]).build());
+            var __tmp = [(${attribute.attribute})];
+            var __s = [(${attribute.converter})](__tmp);
+            map.put("[(${attribute.name})]", AttributeValue.builder().[(${attribute.builder})](__s).build());
         }
 [/]
         PutItemRequest putItemRequest = PutItemRequest.builder()
@@ -69,4 +71,19 @@ public class [(${project.factoryClass})] {
         return Optional.of(obj);
      }
 [/]
+     private static String __l(Long val) {
+        return Long.toString(val);
+     }
+
+     private static Long __lx(String val) {
+         return Long.parseLong(val);
+     }
+
+     private static String __s(String val) {
+        return val;
+     }
+
+     private static String __sx(String val) {
+         return val;
+     }
 }
