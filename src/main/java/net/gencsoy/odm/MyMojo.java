@@ -107,9 +107,11 @@ public class MyMojo
         }
 
         TemplateProcessor templateProcessor = new TemplateProcessor();
+        JavaCodeFormatter codeFormatter = new JavaCodeFormatter();
 
         try {
             String factoryClassContents = templateProcessor.processFactoryClass(extendProject);
+            factoryClassContents = codeFormatter.formatNoException(factoryClassContents);
             Files.writeString(packageDirectory.toPath().resolve(extendProject.getFactoryClass() + ".java"), factoryClassContents);
         } catch (IOException e) {
             throw new MojoExecutionException("Error creating factory ", e);
@@ -117,6 +119,7 @@ public class MyMojo
 
         try {
             String libClassContents = templateProcessor.processLibClass(extendProject);
+            libClassContents = codeFormatter.formatNoException(libClassContents);
             Files.writeString(packageDirectory.toPath().resolve("lib.java"), libClassContents);
         } catch (IOException e) {
             throw new MojoExecutionException("Error creating factory ", e);
@@ -126,6 +129,7 @@ public class MyMojo
             for (DynamoTable table : extendProject.getTables()) {
                 for (DynamoItem item : table.getItems()) {
                     String itemContents = templateProcessor.processItem(extendProject, (ExtendedDynamoItem) item);
+                    itemContents = codeFormatter.formatNoException(itemContents);
                     Files.writeString(packageDirectory.toPath().resolve(item.getName() + ".java"), itemContents);
                 }
             }
