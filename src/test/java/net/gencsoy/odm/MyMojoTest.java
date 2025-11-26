@@ -34,7 +34,7 @@ public class MyMojoTest {
         assertNotNull(outputDirectory);
         assertTrue(outputDirectory.exists());
 
-        File touch = new File(outputDirectory, "my/test/TestsObjectsFactory.java");
+        File touch = new File(outputDirectory, "com/example/GameScoreEntityManager.java");
         assertTrue(touch.exists());
 
         File expectedOutputDirectory = new File("target/test-harness/project-to-test").getAbsoluteFile();
