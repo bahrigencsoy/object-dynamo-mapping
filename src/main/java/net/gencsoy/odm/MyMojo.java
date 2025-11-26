@@ -81,6 +81,10 @@ public class MyMojo
             throw new MojoExecutionException(ex);
         }
 
+        if (!"0.2".equals(projectDefOriginal.getVersion())) {
+            throw new MojoExecutionException("Please provide version 0.2 of the model json file");
+        }
+
         ExtendedOdmProject extendProject = modelMapper.map(projectDefOriginal, ExtendedOdmProject.class);
 
         mapListItems(extendProject.getTables(), ExtendedDynamoTable.class, new Consumer<ExtendedDynamoTable>() {

@@ -6,14 +6,15 @@ import software.amazon.awssdk.services.dynamodb.model.*;
 import java.util.Map;
 import java.util.HashMap;
 import java.util.Optional;
+import java.util.function.BiFunction;
 
 class lib {
 
-    static String __l(Long val) {
+    static String __n(Long val) {
         return Long.toString(val);
     }
 
-    static Long __lx(String val) {
+    static Long __nx(String val) {
         return Long.parseLong(val);
     }
 
@@ -23,6 +24,43 @@ class lib {
 
     static String __sx(String val) {
         return val;
+    }
+
+    public static class GenericMutator<T, P> extends lib.FieldMutator {
+
+        private final String attribute;
+        private final P parent;
+        private final BiFunction<AttributeValue.Builder, T, AttributeValue.Builder> converter;
+        private boolean delete = false;
+        private T value;
+
+        GenericMutator(String attribute, P parent, BiFunction<AttributeValue.Builder, T, AttributeValue.Builder> converter) {
+            this.parent = parent;
+            this.attribute = attribute;
+            this.converter = converter;
+        }
+
+        public P setValue(T value) {
+            this.value = value;
+            return parent;
+        }
+
+        public P delete() {
+            this.delete = true;
+            return parent;
+        }
+
+        @Override
+        void accept(Map<String, AttributeValueUpdate> updatedValues) {
+            if (delete) {
+                updatedValues.put(attribute, AttributeValueUpdate.builder().action(AttributeAction.DELETE).build());
+            } else {
+                var builder = AttributeValue.builder();
+                builder = converter.apply(builder, value);
+                updatedValues.put(attribute, AttributeValueUpdate.builder()
+                        .value(builder.build()).action(AttributeAction.PUT).build());
+            }
+        }
     }
 
     public static class StringFieldMutator extends lib.FieldMutator {

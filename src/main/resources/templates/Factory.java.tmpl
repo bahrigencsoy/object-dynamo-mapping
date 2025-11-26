@@ -35,7 +35,7 @@ public class [(${project.factoryClass})] {
 [# th:each="attribute : ${item.attributes}"]
         if ([(${attribute.attribute})] != null) {
             var __tmp = [(${attribute.attribute})];
-            var __s = [(${attribute.converter})](__tmp);
+            var __s = __[(${attribute.converter})](__tmp);
             map.put("[(${attribute.name})]", AttributeValue.builder().[(${attribute.builder})](__s).build());
         }
 [/]

@@ -28,9 +28,9 @@ public class ExtendedDynamoAttribute extends DynamoAttribute {
 
     public String getConverter() {
         return switch (getType()) {
-            case STRING -> "__s";
+            case STRING -> "s";
             case BINARY -> "zzzzzz";
-            case NUMBER -> "__l";
+            case NUMBER -> "n";
         };
     }
 }
