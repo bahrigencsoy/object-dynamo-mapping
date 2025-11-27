@@ -17,6 +17,7 @@ resource "aws_dynamodb_table" "game_scores" {
   billing_mode   = "PAY_PER_REQUEST"
   table_class    = "STANDARD_INFREQUENT_ACCESS"
   hash_key       = "user_id"
+  range_key      = "game_title"
 
   attribute {
     name = "user_id"
@@ -24,15 +25,17 @@ resource "aws_dynamodb_table" "game_scores" {
   }
 
   attribute {
-    name = "game_genre"
+    name = "game_title"
     type = "S"
   }
 
+  /* DID NOT WORK CHECK LATER: One or more parameter values were invalid: Table KeySchema does not have a range key, which is required when specifying a LocalSecondaryIndex
   local_secondary_index {
     name            = "game_genres_idx"
     range_key       = "game_genre"
     projection_type = "ALL"
   }
+   */
 
   on_demand_throughput {
     max_read_request_units  = 2
