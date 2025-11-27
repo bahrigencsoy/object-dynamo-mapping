@@ -71,5 +71,10 @@ public class [(${item.name})] {
               obj._setClient(client);
               return obj;
         }
+
+        public void delete() {
+            DeleteItemRequest request = DeleteItemRequest.builder().tableName("[(${item.table.name})]").key(key).build();
+            var response = client.deleteItem(request);
+        }
     }
 }

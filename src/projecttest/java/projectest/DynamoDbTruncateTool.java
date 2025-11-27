@@ -1,4 +1,4 @@
-package net.gencsoy.odm;
+package projectest;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

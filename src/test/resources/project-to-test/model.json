@@ -4,7 +4,7 @@
   "factoryClass": "GameScoreEntityManager",
   "tables": [
     {
-      "name": "games_scores_odm_test",
+      "name": "game_scores_odm_test",
       "partitionKey": {
         "name": "user_id",
         "type": "STRING",
@@ -24,11 +24,6 @@
               "type": "NUMBER",
               "attribute": "totalScore",
               "javaType": "Integer"
-            },
-            {
-              "name": "game_data",
-              "type": "BINARY",
-              "attribute": "gameData"
             }
           ]
         }

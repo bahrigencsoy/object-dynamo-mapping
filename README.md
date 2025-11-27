@@ -24,7 +24,7 @@ public class Usage {
 
     void insertEntity() {
 
-        GameScore score = em.putGameScore("user_10", "Another World", null, new byte[]{1, 2, 33});
+        GameScore score = em.putGameScore("user_10", "Another World", null);
     }
 
     void queryAndUpdateEntity() {
@@ -45,7 +45,7 @@ public class Usage {
   "factoryClass": "GameScoreEntityManager",
   "tables": [
     {
-      "name": "games_scores_odm_test",
+      "name": "game_scores_odm_test",
       "partitionKey": {
         "name": "user_id",
         "type": "STRING",
@@ -65,11 +65,6 @@ public class Usage {
               "type": "NUMBER",
               "attribute": "totalScore",
               "javaType": "Integer"
-            },
-            {
-              "name": "game_data",
-              "type": "BINARY",
-              "attribute": "gameData"
             }
           ]
         }
