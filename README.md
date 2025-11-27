@@ -118,7 +118,7 @@ public class Usage {
             <plugin>
                 <groupId>net.gencsoy.odm</groupId>
                 <artifactId>odm-maven-plugin</artifactId>
-                <version>0.2</version>
+                <version>0.3-SNAPSHOT</version>
                 <executions>
                     <execution>
                         <id>generate-dynamo-files</id>

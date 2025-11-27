@@ -7,7 +7,7 @@
 
     <groupId>net.gencsoy.odm</groupId>
     <artifactId>odm-maven-plugin</artifactId>
-    <version>0.2</version>
+    <version>0.3-SNAPSHOT</version>
     <packaging>maven-plugin</packaging>
 
     <name>odm Maven Plugin</name>
