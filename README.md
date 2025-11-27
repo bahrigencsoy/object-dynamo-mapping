@@ -22,16 +22,16 @@ public class Usage {
         em = new GameScoreEntityManager(null /* replace */);
     }
 
-    void insertEntity(){
+    void insertEntity() {
 
-        GameScore score = em.putGameScore("user_10", "Another World", null);
+        GameScore score = em.putGameScore("user_10", "Another World", null, new byte[]{1, 2, 33});
     }
 
     void queryAndUpdateEntity() {
         GameScore score = em.queryGameScore("user_10", "Another World").get();
 
         score.mutator()
-                .totalScore().setValue(123L)
+                .totalScore().setValue(123)
                 .commit();
     }
 }
@@ -63,7 +63,13 @@ public class Usage {
             {
               "name": "total_score",
               "type": "NUMBER",
-              "attribute": "totalScore"
+              "attribute": "totalScore",
+              "javaType": "Integer"
+            },
+            {
+              "name": "game_data",
+              "type": "BINARY",
+              "attribute": "gameData"
             }
           ]
         }

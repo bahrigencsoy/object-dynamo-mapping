@@ -22,7 +22,7 @@ public class ExtendedDynamoAttribute extends DynamoAttribute {
             case STRING:
                 yield "StringAttributeHelper";
             case BINARY:
-                yield "zzzzzz";
+                yield "Base64ArrayAttributeHelper";
             case NUMBER :
                 String javaType = getJavaType();
                 if ("Long".equals(javaType)){

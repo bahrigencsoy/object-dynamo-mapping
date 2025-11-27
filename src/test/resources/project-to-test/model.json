@@ -24,6 +24,11 @@
               "type": "NUMBER",
               "attribute": "totalScore",
               "javaType": "Integer"
+            },
+            {
+              "name": "game_data",
+              "type": "BINARY",
+              "attribute": "gameData"
             }
           ]
         }

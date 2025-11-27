@@ -1,8 +1,7 @@
 package [(${project.packageName})];
 
-import software.amazon.awssdk.services.dynamodb.model.AttributeAction;
-import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
-import software.amazon.awssdk.services.dynamodb.model.AttributeValueUpdate;
+import software.amazon.awssdk.core.SdkBytes;
+import software.amazon.awssdk.services.dynamodb.model.*;
 
 import java.util.Map;
 
@@ -85,6 +84,23 @@ class lib {
         @Override
         public Integer extract(AttributeValue value) {
             return Integer.parseInt(value.n());
+        }
+    }
+
+    static class Base64ArrayAttributeHelper extends BaseAttributeHelper<byte[]> {
+
+        public Base64ArrayAttributeHelper(String attributeName) {
+            super(attributeName);
+        }
+
+        @Override
+        public AttributeValue.Builder build(AttributeValue.Builder builder, byte[] value) {
+            return builder.b(SdkBytes.fromByteArrayUnsafe(value));
+        }
+
+        @Override
+        public byte[] extract(AttributeValue value) {
+            return value.b().asByteArrayUnsafe();
         }
     }
 

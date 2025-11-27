@@ -12,9 +12,9 @@ public class Usage {
         em = new GameScoreEntityManager(null /* replace */);
     }
 
-    void insertEntity(){
+    void insertEntity() {
 
-        GameScore score = em.putGameScore("user_10", "Another World", null);
+        GameScore score = em.putGameScore("user_10", "Another World", null, new byte[]{1, 2, 33});
     }
 
     void queryAndUpdateEntity() {
