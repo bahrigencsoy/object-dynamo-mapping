@@ -11,6 +11,7 @@ import java.util.Random;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 
+@SuppressWarnings("ALL")
 public class IntegrationTest {
 
     private DynamoDbClient client;
@@ -45,7 +46,7 @@ public class IntegrationTest {
         assertFalse(em.queryGameScore(item.getUserId(), item.getGameTitle()).isPresent());
     }
 
-    private void step_104_insert_and_query_1_item_again() {
+    void step_104_insert_and_query_1_item_again() {
         var newScore = em.putGameScore(item.getUserId(), item.getGameTitle(), -1);
         assertEquals(item.getUserId(), newScore.getUserId());
         assertEquals(item.getGameTitle(), newScore.getGameTitle());
@@ -55,6 +56,14 @@ public class IntegrationTest {
         assertEquals(item.getGameTitle(), newScore.getGameTitle());
         assertEquals(-1, newScore.getTotalScore());
         newScore.mutator().delete();
+    }
+
+    void step_105_update_item() {
+        item = em.putGameScore("user", "my game", 100);
+        item = em.queryGameScore("user", "my game").get();
+        item.mutator().totalScore().setValue(200).commit();
+        item = em.queryGameScore("user", "my game").get();
+        assertEquals(200, item.getTotalScore());
     }
 
     void step_110_insert_20_items() {
@@ -75,6 +84,7 @@ public class IntegrationTest {
         test.step_102_delete_1_item();
         test.step_103_query_1_item();
         test.step_104_insert_and_query_1_item_again();
+        test.step_105_update_item();;
         test.step_110_insert_20_items();
     }
 
