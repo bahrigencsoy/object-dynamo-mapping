@@ -15,7 +15,7 @@ public class DynamoItem {
         this.name = name;
     }
 
-    public List<DynamoAttribute> getAttributes() {
+    public final List<DynamoAttribute> getAttributes() {
         return attributes;
     }
 

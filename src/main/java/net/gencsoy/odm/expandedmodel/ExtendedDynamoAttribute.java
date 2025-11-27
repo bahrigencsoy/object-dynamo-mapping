@@ -23,14 +23,14 @@ public class ExtendedDynamoAttribute extends DynamoAttribute {
                 yield "StringAttributeHelper";
             case BINARY:
                 yield "Base64ArrayAttributeHelper";
-            case NUMBER :
+            case NUMBER:
                 String javaType = getJavaType();
-                if ("Long".equals(javaType)){
+                if ("Long".equals(javaType)) {
                     yield "LongAttributeHelper";
-                } else if ("Integer".equals(javaType)){
+                } else if ("Integer".equals(javaType)) {
                     yield "IntegerAttributeHelper";
                 } else {
-                    throw new IllegalArgumentException(javaType+" is not suitable for NUMBER");
+                    throw new IllegalArgumentException(javaType + " is not suitable for NUMBER");
                 }
         };
     }

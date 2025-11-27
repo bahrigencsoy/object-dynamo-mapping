@@ -35,7 +35,7 @@ public class [(${project.factoryClass})] {
 
         Map<String, AttributeValue> map = new HashMap<>();
         [# th:insert="~{key}"][/]
-[# th:each="attribute : ${item.attributes}"]
+[# th:each="attribute : ${item.derivedAttributes}"]
         if ([(${attribute.attribute})] != null) {
             [(${item.name})].[(${attribute.helper})].contributeToMap(map, [(${attribute.attribute})]);
         }

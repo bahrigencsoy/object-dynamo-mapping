@@ -67,7 +67,7 @@ public class IntegrationTest {
     }
 
     void step_101_cache_item_tests() {
-        var cache = em.putCacheResource("a", new byte[]{1, 2, 3});
+        var cache = em.putCacheResource("a", null, new byte[]{1, 2, 3});
         cache = em.queryCacheResource("a").get();
         assertArrayEquals(new byte[]{1, 2, 3}, cache.getData());
     }
@@ -91,7 +91,6 @@ public class IntegrationTest {
         test.step_103_query_1_item();
         test.step_104_insert_and_query_1_item_again();
         test.step_105_update_item();
-        ;
         test.step_310_insert_20_items();
     }
 
