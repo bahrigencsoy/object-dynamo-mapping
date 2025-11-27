@@ -22,6 +22,7 @@ public class JavaCodeFormatter {
         options.put(DefaultCodeFormatterConstants.FORMATTER_TAB_CHAR, "space");
         options.put(DefaultCodeFormatterConstants.FORMATTER_TAB_SIZE, "4");
         options.put(DefaultCodeFormatterConstants.FORMATTER_INDENTATION_SIZE, "4");
+        options.put(DefaultCodeFormatterConstants.FORMATTER_LINE_SPLIT, "120");
         this.codeFormatter = ToolFactory.createCodeFormatter(options);
     }
 

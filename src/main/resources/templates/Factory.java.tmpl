@@ -3,9 +3,8 @@ package [(${project.packageName})];
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
 import software.amazon.awssdk.services.dynamodb.model.*;
 
-import java.util.Map;
-import java.util.HashMap;
-import java.util.Optional;
+import java.util.*;
+import java.util.concurrent.atomic.AtomicReference;
 
 import static [(${project.packageName})].lib.*;
 
@@ -76,5 +75,67 @@ public class [(${project.factoryClass})] {
         obj._setClient(client);
         return Optional.of(obj);
      }
+
+     private Iterator<[(${item.name})]> execute[(${item.name})]Query(QueryRequest queryRequest){
+        AtomicReference<QueryResponse> currentResponse = new AtomicReference<>(client.query(queryRequest));
+        AtomicReference<Iterator<Map<String, AttributeValue>>> currentIterator = new AtomicReference<>(currentResponse.get().items().iterator());
+        return new Iterator<>() {
+            @Override
+            public boolean hasNext() {
+                if (currentIterator.get().hasNext()) {
+                    return true;
+                } else {
+                    if (currentResponse.get().hasLastEvaluatedKey()) {
+                        Map<String, AttributeValue> lastEvaluatedKey = currentResponse.get().lastEvaluatedKey();
+                        QueryRequest copy = queryRequest.copy(builder -> builder.exclusiveStartKey(lastEvaluatedKey));
+                        currentResponse.set(client.query(copy));
+                        currentIterator.set(currentResponse.get().items().iterator());
+                        return true;
+                    } else {
+                        return false;
+                    }
+                }
+            }
+
+            @Override
+            public [(${item.name})] next() {
+                Map<String, AttributeValue> map = currentIterator.get().next();
+                return __construct[(${item.name})](map);
+            }
+        };
+     }
 [/]
+
+
+
+public class DynamoDbQueryExample {
+
+        public static void main(String[] args) {
+            DynamoDbClient ddb = DynamoDbClient.create();
+
+            String tableName = "YourTableName";
+            String indexName = "Your-Secondary-Index-Name";
+            String partitionKeyAlias = ":pkVal";
+
+            // 1. Define the value you are searching for (e.g., searching for "user_123")
+            Map<String, AttributeValue> expressionAttributeValues = new HashMap<>();
+            expressionAttributeValues.put(partitionKeyAlias, AttributeValue.builder().s("user_123").build());
+
+            // 2. Build the Query Request
+            QueryRequest queryRequest = QueryRequest.builder()
+                    .tableName(tableName)
+                    .indexName(indexName) // <--- CRITICAL: Specify the index name here
+                    .keyConditionExpression("IndexPartitionKeyName = " + partitionKeyAlias) // Use the index's key name
+                    .expressionAttributeValues(expressionAttributeValues)
+                    .build();
+
+            // 3. Execute the Query
+            QueryResponse response = ddb.query(queryRequest);
+
+            // 4. Process results
+            response.items().forEach(item -> {
+                System.out.println("Item found: " + item);
+            });
+        }
+    }
 }
