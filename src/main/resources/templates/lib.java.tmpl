@@ -24,16 +24,23 @@ class lib {
         T extract(AttributeValue value);
     }
 
-    static class StringAttributeHelper implements AttributeHelper<String> {
+    static abstract class BaseAttributeHelper<T> implements AttributeHelper<T> {
         private final String attributeName;
 
-        public StringAttributeHelper(String attributeName) {
+        BaseAttributeHelper(String attributeName) {
             this.attributeName = attributeName;
         }
 
         @Override
-        public String attributeName() {
+        public final String attributeName() {
             return attributeName;
+        }
+    }
+
+    static class StringAttributeHelper extends BaseAttributeHelper<String> {
+
+        public StringAttributeHelper(String attributeName) {
+            super(attributeName);
         }
 
         @Override
@@ -47,17 +54,10 @@ class lib {
         }
     }
 
-    static class LongAttributeHelper implements AttributeHelper<Long> {
-        private final String attributeName;
+    static class LongAttributeHelper extends BaseAttributeHelper<Long> {
 
         public LongAttributeHelper(String attributeName) {
-            this.attributeName = attributeName;
-        }
-
-
-        @Override
-        public String attributeName() {
-            return attributeName;
+            super(attributeName);
         }
 
         @Override
@@ -68,6 +68,23 @@ class lib {
         @Override
         public Long extract(AttributeValue value) {
             return Long.parseLong(value.n());
+        }
+    }
+
+    static class IntegerAttributeHelper extends BaseAttributeHelper<Integer> {
+
+        public IntegerAttributeHelper(String attributeName) {
+            super(attributeName);
+        }
+
+        @Override
+        public AttributeValue.Builder build(AttributeValue.Builder builder, Integer value) {
+            return builder.n(Integer.toString(value));
+        }
+
+        @Override
+        public Integer extract(AttributeValue value) {
+            return Integer.parseInt(value.n());
         }
     }
 

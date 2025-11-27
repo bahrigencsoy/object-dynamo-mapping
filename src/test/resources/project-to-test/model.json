@@ -22,7 +22,8 @@
             {
               "name": "total_score",
               "type": "NUMBER",
-              "attribute": "totalScore"
+              "attribute": "totalScore",
+              "javaType": "Integer"
             }
           ]
         }

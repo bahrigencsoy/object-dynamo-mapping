@@ -21,7 +21,7 @@ public class Usage {
         GameScore score = em.queryGameScore("user_10", "Another World").get();
 
         score.mutator()
-                .totalScore().setValue(123L)
+                .totalScore().setValue(123)
                 .commit();
     }
 }

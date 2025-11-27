@@ -19,9 +19,19 @@ public class ExtendedDynamoAttribute extends DynamoAttribute {
 
     public String getHelperClass() {
         return switch (getType()) {
-            case STRING -> "StringAttributeHelper";
-            case BINARY -> "zzzzzz";
-            case NUMBER -> "LongAttributeHelper";
+            case STRING:
+                yield "StringAttributeHelper";
+            case BINARY:
+                yield "zzzzzz";
+            case NUMBER :
+                String javaType = getJavaType();
+                if ("Long".equals(javaType)){
+                    yield "LongAttributeHelper";
+                } else if ("Integer".equals(javaType)){
+                    yield "IntegerAttributeHelper";
+                } else {
+                    throw new IllegalArgumentException(javaType+" is not suitable for NUMBER");
+                }
         };
     }
 
