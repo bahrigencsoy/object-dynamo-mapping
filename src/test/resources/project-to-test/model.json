@@ -1,5 +1,5 @@
 {
-  "version": "0.2",
+  "version": "0.3",
   "packageName": "com.example",
   "factoryClass": "GameScoreEntityManager",
   "tables": [
@@ -24,6 +24,33 @@
               "type": "NUMBER",
               "attribute": "totalScore",
               "javaType": "Integer"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "cached_resource_odm_test",
+      "partitionKey": {
+        "name": "cache_item_key",
+        "type": "STRING",
+        "attribute": "key"
+      },
+      "localSecondaryIndexes": {
+        "cache_id_ix": {
+          "name": "cached_item_unique_id",
+          "type": "STRING",
+          "attribute": "uniqueId"
+        }
+      },
+      "items": [
+        {
+          "name": "CacheResource",
+          "attributes": [
+            {
+              "name": "cached_data",
+              "type": "BINARY",
+              "attribute": "data"
             }
           ]
         }

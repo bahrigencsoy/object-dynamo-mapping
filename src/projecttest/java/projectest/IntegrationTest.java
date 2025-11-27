@@ -8,15 +8,14 @@ import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
 
 import java.util.Random;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.*;
 
 @SuppressWarnings("ALL")
 public class IntegrationTest {
 
     private DynamoDbClient client;
     private GameScoreEntityManager em;
-    private GameScore item;
+    private GameScore score;
 
     void step_001_create_client() {
         client = DynamoDbClient.builder()
@@ -27,6 +26,7 @@ public class IntegrationTest {
 
     void step_002_delete_all_items() {
         DynamoDbTruncateTool.truncateTable(client, "game_scores_odm_test");
+        DynamoDbTruncateTool.truncateTable(client, "cached_resource_odm_test");
     }
 
     void step_003_create_em() {
@@ -35,38 +35,44 @@ public class IntegrationTest {
 
     void step_101_insert_1_item() {
         Random random = new Random();
-        item = em.putGameScore("_" + random.nextLong(), "__" + random.nextLong(), random.nextInt());
+        score = em.putGameScore("_" + random.nextLong(), "__" + random.nextLong(), random.nextInt());
     }
 
     void step_102_delete_1_item() {
-        item.mutator().delete();
+        score.mutator().delete();
     }
 
     void step_103_query_1_item() {
-        assertFalse(em.queryGameScore(item.getUserId(), item.getGameTitle()).isPresent());
+        assertFalse(em.queryGameScore(score.getUserId(), score.getGameTitle()).isPresent());
     }
 
     void step_104_insert_and_query_1_item_again() {
-        var newScore = em.putGameScore(item.getUserId(), item.getGameTitle(), -1);
-        assertEquals(item.getUserId(), newScore.getUserId());
-        assertEquals(item.getGameTitle(), newScore.getGameTitle());
+        var newScore = em.putGameScore(score.getUserId(), score.getGameTitle(), -1);
+        assertEquals(score.getUserId(), newScore.getUserId());
+        assertEquals(score.getGameTitle(), newScore.getGameTitle());
         assertEquals(-1, newScore.getTotalScore());
-        newScore = em.queryGameScore(item.getUserId(), item.getGameTitle()).get();
-        assertEquals(item.getUserId(), newScore.getUserId());
-        assertEquals(item.getGameTitle(), newScore.getGameTitle());
+        newScore = em.queryGameScore(score.getUserId(), score.getGameTitle()).get();
+        assertEquals(score.getUserId(), newScore.getUserId());
+        assertEquals(score.getGameTitle(), newScore.getGameTitle());
         assertEquals(-1, newScore.getTotalScore());
         newScore.mutator().delete();
     }
 
     void step_105_update_item() {
-        item = em.putGameScore("user", "my game", 100);
-        item = em.queryGameScore("user", "my game").get();
-        item.mutator().totalScore().setValue(200).commit();
-        item = em.queryGameScore("user", "my game").get();
-        assertEquals(200, item.getTotalScore());
+        score = em.putGameScore("user", "my game", 100);
+        score = em.queryGameScore("user", "my game").get();
+        score.mutator().totalScore().setValue(200).commit();
+        score = em.queryGameScore("user", "my game").get();
+        assertEquals(200, score.getTotalScore());
     }
 
-    void step_110_insert_20_items() {
+    void step_101_cache_item_tests() {
+        var cache = em.putCacheResource("a", new byte[]{1, 2, 3});
+        cache = em.queryCacheResource("a").get();
+        assertArrayEquals(new byte[]{1, 2, 3}, cache.getData());
+    }
+
+    void step_310_insert_20_items() {
         for (int i = 0; i < 10; i++) {
             em.putGameScore("user_" + i, "shooter blaster", Math.abs(i * 10));
         }
@@ -84,8 +90,9 @@ public class IntegrationTest {
         test.step_102_delete_1_item();
         test.step_103_query_1_item();
         test.step_104_insert_and_query_1_item_again();
-        test.step_105_update_item();;
-        test.step_110_insert_20_items();
+        test.step_105_update_item();
+        ;
+        test.step_310_insert_20_items();
     }
 
 

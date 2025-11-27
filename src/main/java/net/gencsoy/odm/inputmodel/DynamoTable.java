@@ -1,13 +1,24 @@
 package net.gencsoy.odm.inputmodel;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class DynamoTable {
     private String name;
     private DynamoAttribute partitionKey;
     private DynamoAttribute sortKey;
     private List<DynamoItem> items = new ArrayList<>();
+    private Map<String, DynamoAttribute> localSecondaryIndexes = new HashMap<>();
+
+    public Map<String, DynamoAttribute> getLocalSecondaryIndexes() {
+        return localSecondaryIndexes;
+    }
+
+    public void setLocalSecondaryIndexes(Map<String, DynamoAttribute> localSecondaryIndexes) {
+        this.localSecondaryIndexes = localSecondaryIndexes;
+    }
 
     public DynamoAttribute getPartitionKey() {
         return partitionKey;

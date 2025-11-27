@@ -7,6 +7,7 @@ import net.gencsoy.odm.expandedmodel.ExtendedDynamoAttribute;
 import net.gencsoy.odm.expandedmodel.ExtendedDynamoItem;
 import net.gencsoy.odm.expandedmodel.ExtendedDynamoTable;
 import net.gencsoy.odm.expandedmodel.ExtendedOdmProject;
+import net.gencsoy.odm.inputmodel.DynamoAttribute;
 import net.gencsoy.odm.inputmodel.DynamoItem;
 import net.gencsoy.odm.inputmodel.DynamoTable;
 import net.gencsoy.odm.inputmodel.OdmProject;
@@ -19,9 +20,7 @@ import org.modelmapper.ModelMapper;
 
 import java.io.*;
 import java.nio.file.Files;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.function.Consumer;
+import java.util.function.UnaryOperator;
 
 /**
  * Goal which touches a timestamp file.
@@ -43,18 +42,6 @@ public class MyMojo
     @VisibleForTesting
     File getOutputDirectory() {
         return outputDirectory;
-    }
-
-    private <T, V extends T> void mapListItems(List<T> list, Class<V> targetClass, Consumer<V> customizer) {
-        List<T> clone = new ArrayList<>(list);
-        list.clear();
-        for (T original : clone) {
-            V copy = modelMapper.map(original, targetClass);
-            if (customizer != null) {
-                customizer.accept(copy);
-            }
-            list.add(copy);
-        }
     }
 
     public void execute()
@@ -81,24 +68,36 @@ public class MyMojo
             throw new MojoExecutionException(ex);
         }
 
-        if (!"0.2".equals(projectDefOriginal.getVersion())) {
+        if (!"0.3".equals(projectDefOriginal.getVersion())) {
             throw new MojoExecutionException("Please provide version 0.2 of the model json file");
         }
 
         ExtendedOdmProject extendProject = modelMapper.map(projectDefOriginal, ExtendedOdmProject.class);
 
-        mapListItems(extendProject.getTables(), ExtendedDynamoTable.class, new Consumer<ExtendedDynamoTable>() {
+        extendProject.getTables().replaceAll(new UnaryOperator<DynamoTable>() {
             @Override
-            public void accept(ExtendedDynamoTable dynamoTable) {
+            public DynamoTable apply(DynamoTable input) {
+                ExtendedDynamoTable dynamoTable = modelMapper.map(input, ExtendedDynamoTable.class);
                 dynamoTable.setPartitionKey(modelMapper.map(dynamoTable.getPartitionKey(), ExtendedDynamoAttribute.class));
-                dynamoTable.setSortKey(modelMapper.map(dynamoTable.getSortKey(), ExtendedDynamoAttribute.class));
-                mapListItems(dynamoTable.getItems(), ExtendedDynamoItem.class, new Consumer<ExtendedDynamoItem>() {
+                if (dynamoTable.getSortKey() != null) {
+                    dynamoTable.setSortKey(modelMapper.map(dynamoTable.getSortKey(), ExtendedDynamoAttribute.class));
+                }
+                dynamoTable.getLocalSecondaryIndexes().replaceAll((s, dynamoAttribute) -> modelMapper.map(dynamoAttribute, ExtendedDynamoAttribute.class));
+                dynamoTable.getItems().replaceAll(new UnaryOperator<DynamoItem>() {
                     @Override
-                    public void accept(ExtendedDynamoItem extendedDynamoItem) {
+                    public DynamoItem apply(DynamoItem dynamoItem) {
+                        ExtendedDynamoItem extendedDynamoItem = modelMapper.map(dynamoItem, ExtendedDynamoItem.class);
                         extendedDynamoItem.setTable(dynamoTable);
-                        mapListItems(extendedDynamoItem.getAttributes(), ExtendedDynamoAttribute.class, null);
+                        extendedDynamoItem.getAttributes().replaceAll(new UnaryOperator<DynamoAttribute>() {
+                            @Override
+                            public DynamoAttribute apply(DynamoAttribute dynamoAttribute) {
+                                return modelMapper.map(dynamoAttribute, ExtendedDynamoAttribute.class);
+                            }
+                        });
+                        return extendedDynamoItem;
                     }
                 });
+                return dynamoTable;
             }
         });
 

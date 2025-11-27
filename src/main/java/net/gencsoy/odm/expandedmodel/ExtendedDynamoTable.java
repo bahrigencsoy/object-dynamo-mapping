@@ -11,7 +11,13 @@ public class ExtendedDynamoTable extends DynamoTable {
     public List<DynamoAttribute> getKeyAttributes() {
         List<DynamoAttribute> list = new ArrayList<>();
         list.add(getPartitionKey());
-        list.add(getSortKey());
+        if (getSortKey() != null) {
+            list.add(getSortKey());
+        }
         return list;
+    }
+
+    public boolean hasSortKey() {
+        return getSortKey() != null;
     }
 }

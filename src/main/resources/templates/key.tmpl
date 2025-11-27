@@ -1,2 +1,4 @@
 [(${item.name})].[(${item.table.partitionKey.helper})].contributeToMap(map, [(${item.table.partitionKey.attribute})]);
+[# th:if="${item.table.hasSortKey}"]
 [(${item.name})].[(${item.table.sortKey.helper})].contributeToMap(map, [(${item.table.sortKey.attribute})]);
+[/]

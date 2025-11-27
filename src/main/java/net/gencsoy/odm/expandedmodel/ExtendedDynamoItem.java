@@ -21,9 +21,10 @@ public class ExtendedDynamoItem extends DynamoItem {
     public List<DynamoAttribute> getAllAttributes() {
         List<DynamoAttribute> list = new ArrayList<>();
         list.add(table.getPartitionKey());
-        list.add(table.getSortKey());
+        if (table.getSortKey() != null) {
+            list.add(table.getSortKey());
+        }
         list.addAll(getAttributes());
         return list;
     }
-
 }

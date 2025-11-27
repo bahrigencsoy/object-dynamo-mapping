@@ -27,9 +27,11 @@ public class [(${project.factoryClass})] {
         if ([(${item.table.partitionKey.attribute})] == null) {
             throw new NullPointerException("Partition key \"[(${item.table.partitionKey.name})]\" is null");
         }
+        [# th:if="${item.table.hasSortKey}"]
         if ([(${item.table.sortKey.attribute})] == null) {
             throw new NullPointerException("Sort key \"[(${item.table.sortKey.name})]\" is null");
         }
+        [/]
 
         Map<String, AttributeValue> map = new HashMap<>();
         [# th:insert="~{key}"][/]

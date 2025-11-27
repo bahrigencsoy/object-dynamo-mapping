@@ -49,16 +49,10 @@ resource "aws_dynamodb_table" "cached_resource" {
   billing_mode   = "PAY_PER_REQUEST"
   table_class    = "STANDARD_INFREQUENT_ACCESS"
   hash_key       = "cache_item_key"
-  range_key      = "cache_type"
 
   attribute {
     name = "cache_item_key"
     type = "S"
-  }
-
-  attribute {
-    name = "cache_type"
-    type = "N"
   }
 
   attribute {
