@@ -15,8 +15,13 @@ public class IntegrationTest {
                 .build();
     }
 
+    void step_002_delete_all_items() {
+        DynamoDbTruncateTool.truncateTable(client, "game_scores_odm_test");
+    }
+
     public static void main(String[] args) {
         IntegrationTest test = new IntegrationTest();
         test.step_001_create_client();
+        test.step_002_delete_all_items();
     }
 }
