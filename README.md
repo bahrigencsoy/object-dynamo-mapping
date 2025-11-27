@@ -98,8 +98,8 @@ public class Usage {
     <dependencies>
         <dependency>
             <groupId>software.amazon.awssdk</groupId>
-            <artifactId>dynamodb</artifactId>
-            <version>2.39.3</version>
+            <artifactId>dynamodb-enhanced</artifactId>
+            <version>2.39.4</version>
             <exclusions>
                 <exclusion>
                     <groupId>software.amazon.awssdk</groupId>
