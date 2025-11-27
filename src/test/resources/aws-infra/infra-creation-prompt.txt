@@ -1,0 +1,25 @@
+In this directory create single terraform file to construct two dynamo tables. See table descriptions below.
+
+A) Table - 1
+- Name: game_scores_odm_test
+- Partition Key: Name=user_id, Data type=String
+- No sort key
+- Table class: DynamoDB Standard-IA
+- Read/write capacity: on-demand
+- Maximum read request units: 2
+- Maximum write request units: 2
+- Warm throughput: keep default values for both read and write capacity units
+- Local secondary index:
+  > Sort key:game_genre, Index name: game_genres_idx, , Data type=String,
+
+B) Table -2
+- Name: cached_resource_odm_test
+- Partition Key: Name=cache_item_key, Data type=String
+- Sort Key: Name=cache_type, Data type=Number
+- Table class: DynamoDB Standard-IA
+- Read/write capacity: on-demand
+- Maximum read request units: 2
+- Maximum write request units: 2
+- Warm throughput: keep default values for both read and write capacity units
+- Global secondary Index:
+  > Partition key: cached_item_unique_id, Index name: cache_id_idx, Data type=String
