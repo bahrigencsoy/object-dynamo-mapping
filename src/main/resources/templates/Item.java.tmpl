@@ -3,23 +3,14 @@ package [(${project.packageName})];
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
 import software.amazon.awssdk.services.dynamodb.model.*;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
-import java.util.function.BiFunction;
+import java.util.*;
 
 import static [(${project.packageName})].lib.*;
 
 public class [(${item.name})] {
 [# th:each="attribute : ${item.allAttributes}"]
     private [(${attribute.javaType})] [(${attribute.attribute})];
+    static final lib.AttributeHelper<[(${attribute.javaType})]> [(${attribute.helper})] = new lib.[(${attribute.helperClass})]("[(${attribute.name})]");
 [/]
     private transient DynamoDbClient _client;
 
@@ -39,32 +30,25 @@ public class [(${item.name})] {
     }
 
     public Mutator mutator() {
-        var key = [# th:insert="~{key}"][/];
-        return new Mutator(_client, key);
+        var map = new HashMap<String, AttributeValue>();
+        [# th:insert="~{key}"][/];
+        return new Mutator(_client, map);
     }
 
     public static class Mutator {
 
-        private List<FieldMutator> mutators = new ArrayList<>();
-        private DynamoDbClient client;
-        private Map<String, AttributeValue> key;
+        private final List<FieldMutator> mutators = new ArrayList<>();
+        private final DynamoDbClient client;
+        private final Map<String, AttributeValue> key;
 
         Mutator(DynamoDbClient client, Map<String, AttributeValue> key) {
             this.client = client;
-            this.key = key;
+            this.key = Map.copyOf(key);
         }
-
-[# th:each="attribute : ${item.attributes}"]
-        public [(${attribute.javaType})]FieldMutator [(${attribute.attribute})]_() {
-            var mutator = new [(${attribute.javaType})]FieldMutator( "[(${attribute.name})]", this );
-            mutators.add(mutator);
-            return mutator;
-        }
-[/]
 
 [# th:each="attribute : ${item.attributes}"]
         public GenericMutator<[(${attribute.javaType})], Mutator> [(${attribute.attribute})]() {
-            var mutator = new GenericMutator<>("[(${attribute.name})]", this, AttributeValue.Builder::[(${attribute.converter})]);
+            var mutator = new GenericMutator<>("[(${attribute.name})]", this, [(${attribute.helper})]);
             mutators.add(mutator);
             return mutator;
         }
@@ -81,8 +65,8 @@ public class [(${item.name})] {
                                      .attributeUpdates(updatedValues)
                                      .returnValues(ReturnValue.ALL_NEW)
                                      .build();
-             var response = client.updateItem(updateItemRequest);
-             var map = response.attributes();
+              UpdateItemResponse response = client.updateItem(updateItemRequest);
+              Map<String, AttributeValue> map = response.attributes();
 [# th:insert="~{construct-object}"][/]
               obj._setClient(client);
               return obj;

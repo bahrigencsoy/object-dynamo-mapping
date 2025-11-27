@@ -1,43 +1,88 @@
 package [(${project.packageName})];
 
-import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
-import software.amazon.awssdk.services.dynamodb.model.*;
+import software.amazon.awssdk.services.dynamodb.model.AttributeAction;
+import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
+import software.amazon.awssdk.services.dynamodb.model.AttributeValueUpdate;
 
 import java.util.Map;
-import java.util.HashMap;
-import java.util.Optional;
-import java.util.function.BiFunction;
 
 class lib {
 
-    static String __n(Long val) {
-        return Long.toString(val);
+    interface AttributeHelper<T> {
+        String attributeName();
+
+        default void contributeToMap(Map<String, AttributeValue> map, T value) {
+            map.put(attributeName(), build(AttributeValue.builder(), value).build());
+        }
+
+        default T extractFromMap(Map<String, AttributeValue> map) {
+            return extract(map.get(attributeName()));
+        }
+
+        AttributeValue.Builder build(AttributeValue.Builder builder, T value);
+
+        T extract(AttributeValue value);
     }
 
-    static Long __nx(String val) {
-        return Long.parseLong(val);
+    static class StringAttributeHelper implements AttributeHelper<String> {
+        private final String attributeName;
+
+        public StringAttributeHelper(String attributeName) {
+            this.attributeName = attributeName;
+        }
+
+        @Override
+        public String attributeName() {
+            return attributeName;
+        }
+
+        @Override
+        public AttributeValue.Builder build(AttributeValue.Builder builder, String value) {
+            return builder.s(value);
+        }
+
+        @Override
+        public String extract(AttributeValue value) {
+            return value.s();
+        }
     }
 
-    static String __s(String val) {
-        return val;
-    }
+    static class LongAttributeHelper implements AttributeHelper<Long> {
+        private final String attributeName;
 
-    static String __sx(String val) {
-        return val;
+        public LongAttributeHelper(String attributeName) {
+            this.attributeName = attributeName;
+        }
+
+
+        @Override
+        public String attributeName() {
+            return attributeName;
+        }
+
+        @Override
+        public AttributeValue.Builder build(AttributeValue.Builder builder, Long value) {
+            return builder.n(Long.toString(value));
+        }
+
+        @Override
+        public Long extract(AttributeValue value) {
+            return Long.parseLong(value.n());
+        }
     }
 
     public static class GenericMutator<T, P> extends lib.FieldMutator {
 
         private final String attribute;
         private final P parent;
-        private final BiFunction<AttributeValue.Builder, T, AttributeValue.Builder> converter;
+        private final AttributeHelper<T> helper;
         private boolean delete = false;
         private T value;
 
-        GenericMutator(String attribute, P parent, BiFunction<AttributeValue.Builder, T, AttributeValue.Builder> converter) {
+        GenericMutator(String attribute, P parent, AttributeHelper<T> helper) {
             this.parent = parent;
             this.attribute = attribute;
-            this.converter = converter;
+            this.helper = helper;
         }
 
         public P setValue(T value) {
@@ -55,10 +100,10 @@ class lib {
             if (delete) {
                 updatedValues.put(attribute, AttributeValueUpdate.builder().action(AttributeAction.DELETE).build());
             } else {
-                var builder = AttributeValue.builder();
-                builder = converter.apply(builder, value);
-                updatedValues.put(attribute, AttributeValueUpdate.builder()
-                        .value(builder.build()).action(AttributeAction.PUT).build());
+                AttributeValue.Builder builder = AttributeValue.builder();
+                builder = helper.build(builder, value);
+                updatedValues.put(attribute,
+                        AttributeValueUpdate.builder().value(builder.build()).action(AttributeAction.PUT).build());
             }
         }
     }
@@ -87,14 +132,10 @@ class lib {
         @Override
         void accept(Map<String, AttributeValueUpdate> updatedValues) {
             if (delete) {
-                updatedValues.put(attribute, AttributeValueUpdate.builder()
-                        .action(AttributeAction.DELETE)
-                        .build());
+                updatedValues.put(attribute, AttributeValueUpdate.builder().action(AttributeAction.DELETE).build());
             } else {
                 updatedValues.put(attribute, AttributeValueUpdate.builder()
-                        .value(AttributeValue.builder().s(value).build())
-                        .action(AttributeAction.PUT)
-                        .build());
+                        .value(AttributeValue.builder().s(value).build()).action(AttributeAction.PUT).build());
             }
         }
     }

@@ -1,7 +1,6 @@
 package net.gencsoy.odm.expandedmodel;
 
 import net.gencsoy.odm.inputmodel.DynamoAttribute;
-import net.gencsoy.odm.inputmodel.DynamoColumnType;
 
 public class ExtendedDynamoAttribute extends DynamoAttribute {
 
@@ -18,19 +17,15 @@ public class ExtendedDynamoAttribute extends DynamoAttribute {
         }
     }
 
-    public String getBuilder() {
+    public String getHelperClass() {
         return switch (getType()) {
-            case STRING -> "s";
-            case BINARY -> "xxxxxx";
-            case NUMBER -> "n";
+            case STRING -> "StringAttributeHelper";
+            case BINARY -> "zzzzzz";
+            case NUMBER -> "LongAttributeHelper";
         };
     }
 
-    public String getConverter() {
-        return switch (getType()) {
-            case STRING -> "s";
-            case BINARY -> "zzzzzz";
-            case NUMBER -> "n";
-        };
+    public String getHelper() {
+        return "_" + getName() + "__helper";
     }
 }

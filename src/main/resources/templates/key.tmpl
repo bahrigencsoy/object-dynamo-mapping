@@ -1,4 +1,2 @@
-Map.of(
-  "[(${item.table.partitionKey.name})]", AttributeValue.builder().[(${item.table.partitionKey.builder})](__[(${item.table.partitionKey.converter})]([(${item.table.partitionKey.attribute})])).build(),
-  "[(${item.table.sortKey.name})]", AttributeValue.builder().[(${item.table.sortKey.builder})](__[(${item.table.sortKey.converter})]([(${item.table.sortKey.attribute})])).build()
-)
+[(${item.name})].[(${item.table.partitionKey.helper})].contributeToMap(map, [(${item.table.partitionKey.attribute})]);
+[(${item.name})].[(${item.table.sortKey.helper})].contributeToMap(map, [(${item.table.sortKey.attribute})]);

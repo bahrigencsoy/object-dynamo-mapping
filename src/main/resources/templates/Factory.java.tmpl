@@ -31,12 +31,11 @@ public class [(${project.factoryClass})] {
             throw new NullPointerException("Sort key \"[(${item.table.sortKey.name})]\" is null");
         }
 
-        Map<String, AttributeValue> map = new HashMap<>([# th:insert="~{key}"][/]);
+        Map<String, AttributeValue> map = new HashMap<>();
+        [# th:insert="~{key}"][/]
 [# th:each="attribute : ${item.attributes}"]
         if ([(${attribute.attribute})] != null) {
-            var __tmp = [(${attribute.attribute})];
-            var __s = __[(${attribute.converter})](__tmp);
-            map.put("[(${attribute.name})]", AttributeValue.builder().[(${attribute.builder})](__s).build());
+            [(${item.name})].[(${attribute.helper})].contributeToMap(map, [(${attribute.attribute})]);
         }
 [/]
         PutItemRequest putItemRequest = PutItemRequest.builder()
@@ -57,9 +56,12 @@ public class [(${project.factoryClass})] {
 
      public Optional<[(${item.name})]> query[(${item.name})]( [# th:insert="~{key-attributes-types}"][/] )
      {
+        Map<String, AttributeValue> map = new HashMap<String, AttributeValue>();
+        [# th:insert="~{key}"][/]
+
         GetItemRequest getItemRequest = GetItemRequest.builder()
                                             .tableName("[(${item.table.name})]")
-                                            .key([# th:insert="~{key}"][/])
+                                            .key(map)
                                         .build();
 
         GetItemResponse result = client.getItem(getItemRequest);
@@ -67,7 +69,7 @@ public class [(${project.factoryClass})] {
         if (result.item().isEmpty()) {
             return Optional.empty();
         }
-        Map<String, AttributeValue> map = result.item();
+        map = result.item();
         var obj = __construct[(${item.name})](map);
         obj._setClient(client);
         return Optional.of(obj);
