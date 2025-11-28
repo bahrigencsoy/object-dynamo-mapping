@@ -9,17 +9,16 @@ import static [(${project.packageName})].lib.*;
 
 public class [(${item.name})] {
 [# th:each="attribute : ${item.allAttributes}"]
-    private [(${attribute.javaType})] [(${attribute.attribute})];
-    static final lib.AttributeHelper<[(${attribute.javaType})]> [(${attribute.helper})] = new lib.[(${attribute.helperClass})]("[(${attribute.name})]");
+    private final [(${attribute.javaType})] [(${attribute.attribute})];
 [/]
     private transient DynamoDbClient _client;
 
-    [(${item.name})]([# th:insert="~{all-attributes-types}"][/] )
+    [(${item.name})](Builder b)
     {[# th:each="attribute : ${item.allAttributes}"]
-        this.[(${attribute.attribute})] = [(${attribute.attribute})];[/]
+        this.[(${attribute.attribute})] = b.[(${attribute.attribute})];[/]
     }
 [# th:each="attribute : ${item.allAttributes}"]
-    public [(${attribute.javaType})] get[(${#strings.capitalizeWords(attribute.attribute)})]() {
+    public [(${attribute.javaType})] [(${attribute.attribute})]() {
         return [(${attribute.attribute})];
     }
 
@@ -67,7 +66,9 @@ public class [(${item.name})] {
                                      .build();
               UpdateItemResponse response = client.updateItem(updateItemRequest);
               Map<String, AttributeValue> map = response.attributes();
+              [(${item.name})].Builder builder = [(${item.name})].builder();
 [# th:insert="~{construct-object}"][/]
+              var obj = builder.build();
               obj._setClient(client);
               return obj;
         }
@@ -77,4 +78,27 @@ public class [(${item.name})] {
             var response = client.deleteItem(request);
         }
     }
+
+[# th:each="attribute : ${item.allAttributes}"]
+    static final lib.AttributeHelper<[(${attribute.javaType})]> [(${attribute.helper})] = new lib.[(${attribute.helperClass})]("[(${attribute.name})]");
+[/]
+
+    public static Builder builder() { return new Builder(); }
+
+    public static final class Builder {
+[# th:each="attribute : ${item.allAttributes}"]
+        private [(${attribute.javaType})] [(${attribute.attribute})];
+[/]
+        private Builder() {}
+[# th:each="attribute : ${item.allAttributes}"]
+        public Builder [(${attribute.attribute})]([(${attribute.javaType})] [(${attribute.attribute})]) {
+            this.[(${attribute.attribute})] = [(${attribute.attribute})];
+            return this;
+        }
+[/]
+        public [(${item.name})] build() {
+            return new [(${item.name})](this);
+        }
+    }
+
 }

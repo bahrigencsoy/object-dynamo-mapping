@@ -43,18 +43,18 @@ public class IntegrationTest {
     }
 
     void step_103_query_1_item() {
-        assertFalse(em.queryGameScore(score.getUserId(), score.getGameTitle()).isPresent());
+        assertFalse(em.queryGameScore(score.userId(), score.gameTitle()).isPresent());
     }
 
     void step_104_insert_and_query_1_item_again() {
-        var newScore = em.putGameScore(score.getUserId(), score.getGameTitle(), -1);
-        assertEquals(score.getUserId(), newScore.getUserId());
-        assertEquals(score.getGameTitle(), newScore.getGameTitle());
-        assertEquals(-1, newScore.getTotalScore());
-        newScore = em.queryGameScore(score.getUserId(), score.getGameTitle()).get();
-        assertEquals(score.getUserId(), newScore.getUserId());
-        assertEquals(score.getGameTitle(), newScore.getGameTitle());
-        assertEquals(-1, newScore.getTotalScore());
+        var newScore = em.putGameScore(score.userId(), score.gameTitle(), -1);
+        assertEquals(score.userId(), newScore.userId());
+        assertEquals(score.gameTitle(), newScore.gameTitle());
+        assertEquals(-1, newScore.totalScore());
+        newScore = em.queryGameScore(score.userId(), score.gameTitle()).get();
+        assertEquals(score.userId(), newScore.userId());
+        assertEquals(score.gameTitle(), newScore.gameTitle());
+        assertEquals(-1, newScore.totalScore());
         newScore.mutator().delete();
     }
 
@@ -63,13 +63,13 @@ public class IntegrationTest {
         score = em.queryGameScore("user", "my game").get();
         score.mutator().totalScore().setValue(200).commit();
         score = em.queryGameScore("user", "my game").get();
-        assertEquals(200, score.getTotalScore());
+        assertEquals(200, score.totalScore());
     }
 
     void step_101_cache_item_tests() {
         var cache = em.putCacheResource("a", null, new byte[]{1, 2, 3});
         cache = em.queryCacheResource("a").get();
-        assertArrayEquals(new byte[]{1, 2, 3}, cache.getData());
+        assertArrayEquals(new byte[]{1, 2, 3}, cache.data());
     }
 
     void step_310_insert_20_items() {

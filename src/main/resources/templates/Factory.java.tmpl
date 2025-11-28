@@ -17,7 +17,9 @@ public class [(${project.factoryClass})] {
     }
 [# th:each="item : ${project.allItems}"]
     private static [(${item.name})] __construct[(${item.name})](Map<String, AttributeValue> map) {
+        [(${item.name})].Builder builder = [(${item.name})].builder();
         [# th:insert="~{construct-object}"][/]
+        var obj = builder.build();
         return obj;
     }
 
