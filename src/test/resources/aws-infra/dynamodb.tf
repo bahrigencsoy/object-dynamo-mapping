@@ -29,13 +29,16 @@ resource "aws_dynamodb_table" "game_scores" {
     type = "S"
   }
 
-  /* DID NOT WORK CHECK LATER: One or more parameter values were invalid: Table KeySchema does not have a range key, which is required when specifying a LocalSecondaryIndex
+  attribute {
+    name = "game_genre"
+    type = "S"
+  }
+
   local_secondary_index {
     name            = "game_genres_idx"
     range_key       = "game_genre"
     projection_type = "ALL"
   }
-   */
 
   on_demand_throughput {
     max_read_request_units  = 2

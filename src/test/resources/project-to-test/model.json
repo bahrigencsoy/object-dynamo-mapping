@@ -15,6 +15,13 @@
         "type": "STRING",
         "attribute": "gameTitle"
       },
+      "localSecondaryIndexes": {
+        "game_genres_idx": {
+          "name": "game_genre",
+          "type": "STRING",
+          "attribute": "gameGenre"
+        }
+      },
       "items": [
         {
           "name": "GameScore",
@@ -36,7 +43,7 @@
         "type": "STRING",
         "attribute": "key"
       },
-      "localSecondaryIndexes": {
+      "globalSecondaryIndexes": {
         "cache_id_ix": {
           "name": "cached_item_unique_id",
           "type": "STRING",

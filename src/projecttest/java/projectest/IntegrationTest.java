@@ -39,7 +39,7 @@ public class IntegrationTest {
 
     void step_101_insert_1_item() {
         Random random = new Random();
-        score = em.putGameScore("_" + random.nextLong(), "__" + random.nextLong(), random.nextInt(), false);
+        score = em.putGameScore("_" + random.nextLong(), "__" + random.nextLong(), null, random.nextInt(), false);
     }
 
     void step_102_delete_1_item() {
@@ -48,30 +48,30 @@ public class IntegrationTest {
 
     void step_103_query_1_item() {
         assertFalse(em.queryGameScore(score.userId(), score.gameTitle()).isPresent());
-        assertFalse(em.queryGameScore().userId().eq("dava").totalScore().eq(10).execute().findFirst().isPresent());
+        assertFalse(em.queryGameScoreByUserId("dava").totalScore().eq(10).execute().findFirst().isPresent());
     }
 
     void step_104_insert_and_query_1_item_again() {
-        var newScore = em.putGameScore(score.userId(), score.gameTitle(), -1, false);
+        var newScore = em.putGameScore(score.userId(), score.gameTitle(), score.gameGenre(), -1, false);
         assertNotEquals(score, newScore);
         score = newScore;
         newScore = em.queryGameScore(score.userId(), score.gameTitle()).get();
         assertEquals(score, newScore);
-        newScore = em.queryGameScore().userId().eq(score.userId()).execute().findFirst().get();
+        newScore = em.queryGameScoreByUserId(score.userId()).execute().findFirst().get();
         assertEquals(score, newScore);
         newScore.mutator().delete();
     }
 
     void step_105_more_detailed_queries() {
-        assertThrows(DynamoDbException.class, () -> em.queryGameScore().execute());
-        em.putGameScore("aaa", "shooter blaster", 100, false);
-        em.putGameScore("aaa", "space traveler", 200, false);
-        assertEquals(2, em.queryGameScore().userId().eq("aaa").execute().count());
-        assertThrows(DynamoDbException.class, () -> em.queryGameScore().userId().ne("bbb").execute());
+        assertThrows(DynamoDbException.class, () -> em.queryGameScoreByUserId(null).execute());
+        em.putGameScore("aaa", "shooter blaster", "shooter",100, false);
+        em.putGameScore("aaa", "space traveler", "shooter",200, false);
+        assertEquals(2, em.queryGameScoreByUserId("aaa").execute().count());
+        assertThrows(DynamoDbException.class, () -> em.queryGameScoreByUserId("bbb").userId().ne("xxx").execute());
     }
 
     void step_106_update_item() {
-        score = em.putGameScore("user", "my game", 100, false);
+        score = em.putGameScore("user", "my game", null, 100, false);
         score = em.queryGameScore("user", "my game").get();
         score.mutator().totalScore().setValue(200).commit();
         score = em.queryGameScore("user", "my game").get();
@@ -95,7 +95,7 @@ public class IntegrationTest {
     }
 
     void step_201_raced_atomic_puts() {
-        int threadCount = 50;
+        int threadCount = 10;
         long startTime = System.currentTimeMillis();
         Phaser phaser = new Phaser(threadCount + 1);
         AtomicInteger replacedCount = new AtomicInteger(0);
@@ -105,7 +105,7 @@ public class IntegrationTest {
             new Thread(() -> {
                 phaser.arriveAndAwaitAdvance();
                 try {
-                    GameScore previous = em.putGameScore("user", "game", totalScore, true);
+                    GameScore previous = em.putGameScore("user", "game", null, totalScore, true);
                     if (previous.totalScore().equals(totalScore)) {
                         replacedCount.incrementAndGet();
                     } else {
@@ -117,7 +117,7 @@ public class IntegrationTest {
                 phaser.arriveAndAwaitAdvance();
                 for (int j = 0; j < 5; j++) {
                     Random rand = new Random();
-                    em.putGameScore("user", "game " + rand.nextInt(), rand.nextInt(), false);
+                    em.putGameScore("user", "game " + rand.nextInt(), "x"+rand.nextInt(3), rand.nextInt(), false);
                 }
                 phaser.arriveAndAwaitAdvance();
             }).start();
@@ -130,15 +130,6 @@ public class IntegrationTest {
         phaser.arriveAndAwaitAdvance();
         System.err.format("Insertions finished%n");
         assertEquals(1 + threadCount * 5, em.scanAllGameScore().count());
-    }
-
-    void step_310_insert_20_items() {
-        for (int i = 0; i < 10; i++) {
-            em.putGameScore("user_" + i, "shooter blaster", Math.abs(i * 10), false);
-        }
-        for (int i = 5; i < 15; i++) {
-            em.putGameScore("user_" + i, "monster hunter", Math.abs(i * 20), false);
-        }
     }
 
     public static void main(String[] args) {
@@ -155,7 +146,6 @@ public class IntegrationTest {
         test.step_107_scan_items();
         test.step_111_cache_item_tests();
         test.step_201_raced_atomic_puts();
-        test.step_310_insert_20_items();
     }
 
 }

@@ -6,6 +6,7 @@ import software.amazon.awssdk.services.dynamodb.model.*;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.StreamSupport;
+import java.util.function.Function;
 
 import static [(${project.packageName})].lib.*;
 
@@ -97,25 +98,30 @@ public class [(${project.factoryClass})] {
         return Optional.of(obj);
      }
 
-     public class [(${item.name})]Query {
+     public abstract class [(${item.name})]Query {
         private final QueryRequest.Builder builder;
-        private final Map<String, Condition> keyConditions;
-        private final Map<String, Condition> queryFilter;
+        protected final Map<String, Condition> keyConditions;
+        protected final Map<String, Condition> queryFilter;
 
         private [(${item.name})]Query() {
-            this.builder = QueryRequest.builder().tableName("[(${item.table.name})]");
+            this.builder = QueryRequest.builder();
             this.keyConditions = new LinkedHashMap<>();
             this.queryFilter = new LinkedHashMap<>();
         }
 
-[# th:each="attribute : ${item.table.keyAttributes}"]
-        public lib.GenericQuery<[(${attribute.javaType})],[(${item.name})]Query> [(${attribute.attribute})]() {
-            return new lib.GenericQuery<>("[(${attribute.name})]", this, [(${item.name})].[(${attribute.helper})], keyConditions);
+        private void _setTableName(String tableName) {
+            this.builder.tableName(tableName);
         }
-[/]
-[# th:each="attribute : ${item.derivedAttributes}"]
+
+        private void _setIndexName(String indexName) {
+            this.builder.indexName(indexName);
+        }
+
+        protected abstract Map<String, Condition> selectMapForAttribute(String attribute);
+
+[# th:each="attribute : ${item.allAttributes}"]
         public lib.GenericQuery<[(${attribute.javaType})],[(${item.name})]Query> [(${attribute.attribute})]() {
-            return new lib.GenericQuery<>("[(${attribute.name})]", this, [(${item.name})].[(${attribute.helper})], queryFilter);
+            return new lib.GenericQuery<>("[(${attribute.name})]", this, [(${item.name})].[(${attribute.helper})], selectMapForAttribute("[(${attribute.name})]"));
         }
 [/]
         public java.util.stream.Stream<[(${item.name})]> execute() {
@@ -131,8 +137,26 @@ public class [(${project.factoryClass})] {
         }
      }
 
-     public [(${item.name})]Query query[(${item.name})]() {
-        return new [(${item.name})]Query();
+     public [(${item.name})]Query query[(${item.name})]By[(${#strings.capitalizeWords(item.table.partitionKey.attribute)})]([(${item.table.partitionKey.javaType})] [(${item.table.partitionKey.attribute})]) {
+        [(${item.name})]Query query = new [(${item.name})]Query(){
+
+            @Override
+            protected Map<String, Condition> selectMapForAttribute(String attribute) {
+                return switch (attribute) {
+                [# th:each="attribute : ${item.table.keyAttributes}"]
+                    case "[(${attribute.name})]" -> keyConditions;
+                [/]
+                [# th:each="attribute : ${item.derivedAttributes}"]
+                    case "[(${attribute.name})]" -> queryFilter;
+                [/]
+                    default -> throw new IllegalArgumentException("Unknown attribute '" + attribute + "'");
+                };
+            }
+        };
+
+        query._setTableName("[(${item.table.name})]");
+        query.[(${item.table.partitionKey.attribute})]().eq([(${item.table.partitionKey.attribute})]);
+        return query;
      }
 
      public java.util.stream.Stream<[(${item.name})]> scanAll[(${item.name})]() {
@@ -206,35 +230,4 @@ public class [(${project.factoryClass})] {
 [/]
 
 
-
-public class DynamoDbQueryExample {
-
-        public static void main(String[] args) {
-            DynamoDbClient ddb = DynamoDbClient.create();
-
-            String tableName = "YourTableName";
-            String indexName = "Your-Secondary-Index-Name";
-            String partitionKeyAlias = ":pkVal";
-
-            // 1. Define the value you are searching for (e.g., searching for "user_123")
-            Map<String, AttributeValue> expressionAttributeValues = new HashMap<>();
-            expressionAttributeValues.put(partitionKeyAlias, AttributeValue.builder().s("user_123").build());
-
-            // 2. Build the Query Request
-            QueryRequest queryRequest = QueryRequest.builder()
-                    .tableName(tableName)
-                    .indexName(indexName) // <--- CRITICAL: Specify the index name here
-                    .keyConditionExpression("IndexPartitionKeyName = " + partitionKeyAlias) // Use the index's key name
-                    .expressionAttributeValues(expressionAttributeValues)
-                    .build();
-
-            // 3. Execute the Query
-            QueryResponse response = ddb.query(queryRequest);
-
-            // 4. Process results
-            response.items().forEach(item -> {
-                System.out.println("Item found: " + item);
-            });
-        }
-    }
 }

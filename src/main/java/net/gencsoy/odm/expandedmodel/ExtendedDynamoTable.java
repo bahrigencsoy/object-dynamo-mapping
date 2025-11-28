@@ -23,6 +23,7 @@ public class ExtendedDynamoTable extends DynamoTable {
 
     public List<DynamoAttribute> getSortAttributes() {
         List<DynamoAttribute> list = getKeyAttributes();
+        list.addAll(getGlobalSecondaryIndexes().values());
         list.addAll(getLocalSecondaryIndexes().values());
         return list;
     }

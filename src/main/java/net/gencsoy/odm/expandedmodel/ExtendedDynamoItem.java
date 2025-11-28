@@ -24,6 +24,7 @@ public class ExtendedDynamoItem extends DynamoItem {
         if (table.getSortKey() != null) {
             list.add(table.getSortKey());
         }
+        list.addAll(table.getGlobalSecondaryIndexes().values());
         list.addAll(table.getLocalSecondaryIndexes().values());
         list.addAll(getAttributes());
         return list;
@@ -31,6 +32,7 @@ public class ExtendedDynamoItem extends DynamoItem {
 
     public List<DynamoAttribute> getDerivedAttributes() {
         List<DynamoAttribute> list = new ArrayList<>();
+        list.addAll(table.getGlobalSecondaryIndexes().values());
         list.addAll(table.getLocalSecondaryIndexes().values());
         list.addAll(super.getAttributes());
         return list;

@@ -20,6 +20,7 @@ import org.modelmapper.ModelMapper;
 
 import java.io.*;
 import java.nio.file.Files;
+import java.util.function.BiFunction;
 import java.util.function.UnaryOperator;
 
 /**
@@ -83,6 +84,7 @@ public class MyMojo
                     dynamoTable.setSortKey(modelMapper.map(dynamoTable.getSortKey(), ExtendedDynamoAttribute.class));
                 }
                 dynamoTable.getLocalSecondaryIndexes().replaceAll((s, dynamoAttribute) -> modelMapper.map(dynamoAttribute, ExtendedDynamoAttribute.class));
+                dynamoTable.getGlobalSecondaryIndexes().replaceAll((s, dynamoAttribute) -> modelMapper.map(dynamoAttribute, ExtendedDynamoAttribute.class));
                 dynamoTable.getItems().replaceAll(new UnaryOperator<DynamoItem>() {
                     @Override
                     public DynamoItem apply(DynamoItem dynamoItem) {

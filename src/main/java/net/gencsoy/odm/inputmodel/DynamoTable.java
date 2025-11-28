@@ -11,6 +11,7 @@ public class DynamoTable {
     private DynamoAttribute sortKey;
     private List<DynamoItem> items = new ArrayList<>();
     private Map<String, DynamoAttribute> localSecondaryIndexes = new HashMap<>();
+    private Map<String, DynamoAttribute> globalSecondaryIndexes = new HashMap<>();
 
     public Map<String, DynamoAttribute> getLocalSecondaryIndexes() {
         return localSecondaryIndexes;
@@ -18,6 +19,14 @@ public class DynamoTable {
 
     public void setLocalSecondaryIndexes(Map<String, DynamoAttribute> localSecondaryIndexes) {
         this.localSecondaryIndexes = localSecondaryIndexes;
+    }
+
+    public Map<String, DynamoAttribute> getGlobalSecondaryIndexes() {
+        return globalSecondaryIndexes;
+    }
+
+    public void setGlobalSecondaryIndexes(Map<String, DynamoAttribute> globalSecondaryIndexes) {
+        this.globalSecondaryIndexes = globalSecondaryIndexes;
     }
 
     public DynamoAttribute getPartitionKey() {

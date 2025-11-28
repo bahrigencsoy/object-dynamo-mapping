@@ -14,7 +14,7 @@ public class Usage {
 
     void insertEntity() {
 
-        GameScore score = em.putGameScore("user_10", "Another World", null, false);
+        GameScore score = em.putGameScore("user_10", "Another World", "Adventure", 100, false);
     }
 
     void queryAndUpdateEntity() {
