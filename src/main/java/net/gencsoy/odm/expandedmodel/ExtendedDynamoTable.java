@@ -26,4 +26,13 @@ public class ExtendedDynamoTable extends DynamoTable {
         list.addAll(getLocalSecondaryIndexes().values());
         return list;
     }
+
+    public String getPutConditionExpression() {
+        StringBuilder sb = new StringBuilder();
+        sb.append("attribute_not_exists(" + getPartitionKey().getName() + ")");
+        if (getSortKey() != null) {
+            sb.append(" AND attribute_not_exists(" + getSortKey().getName() + ")");
+        }
+        return sb.toString();
+    }
 }

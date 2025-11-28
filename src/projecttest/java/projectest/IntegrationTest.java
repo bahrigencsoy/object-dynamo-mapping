@@ -8,6 +8,8 @@ import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
 import software.amazon.awssdk.services.dynamodb.model.DynamoDbException;
 
 import java.util.Random;
+import java.util.concurrent.Phaser;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -17,6 +19,7 @@ public class IntegrationTest {
     private DynamoDbClient client;
     private GameScoreEntityManager em;
     private GameScore score;
+
 
     void step_001_create_client() {
         client = DynamoDbClient.builder()
@@ -36,7 +39,7 @@ public class IntegrationTest {
 
     void step_101_insert_1_item() {
         Random random = new Random();
-        score = em.putGameScore("_" + random.nextLong(), "__" + random.nextLong(), random.nextInt());
+        score = em.putGameScore("_" + random.nextLong(), "__" + random.nextLong(), random.nextInt(), false);
     }
 
     void step_102_delete_1_item() {
@@ -49,7 +52,7 @@ public class IntegrationTest {
     }
 
     void step_104_insert_and_query_1_item_again() {
-        var newScore = em.putGameScore(score.userId(), score.gameTitle(), -1);
+        var newScore = em.putGameScore(score.userId(), score.gameTitle(), -1, false);
         assertNotEquals(score, newScore);
         score = newScore;
         newScore = em.queryGameScore(score.userId(), score.gameTitle()).get();
@@ -61,32 +64,80 @@ public class IntegrationTest {
 
     void step_105_more_detailed_queries() {
         assertThrows(DynamoDbException.class, () -> em.queryGameScore().execute());
-        em.putGameScore("aaa", "shooter blaster", 100);
-        em.putGameScore("aaa", "space traveler", 200);
+        em.putGameScore("aaa", "shooter blaster", 100, false);
+        em.putGameScore("aaa", "space traveler", 200, false);
         assertEquals(2, em.queryGameScore().userId().eq("aaa").execute().count());
         assertThrows(DynamoDbException.class, () -> em.queryGameScore().userId().ne("bbb").execute());
     }
 
     void step_106_update_item() {
-        score = em.putGameScore("user", "my game", 100);
+        score = em.putGameScore("user", "my game", 100, false);
         score = em.queryGameScore("user", "my game").get();
         score.mutator().totalScore().setValue(200).commit();
         score = em.queryGameScore("user", "my game").get();
         assertEquals(200, score.totalScore());
     }
 
-    void step_101_cache_item_tests() {
-        var cache = em.putCacheResource("a", null, new byte[]{1, 2, 3});
+    void step_107_scan_items() {
+        AtomicInteger count = new AtomicInteger();
+        em.scanAllGameScore().forEach(gs -> {
+            count.incrementAndGet();
+            gs.mutator().delete();
+        });
+        assertEquals(3, count.get());
+    }
+
+    void step_111_cache_item_tests() {
+        var cache = em.putCacheResource("a", null, new byte[]{1, 2, 3}, false);
         cache = em.queryCacheResource("a").get();
         assertArrayEquals(new byte[]{1, 2, 3}, cache.data());
+        cache.mutator().delete();
+    }
+
+    void step_201_raced_atomic_puts() {
+        int threadCount = 50;
+        long startTime = System.currentTimeMillis();
+        Phaser phaser = new Phaser(threadCount + 1);
+        AtomicInteger replacedCount = new AtomicInteger(0);
+        AtomicInteger racedCount = new AtomicInteger(0);
+        for (int i = 0; i < threadCount; i++) {
+            final int totalScore = i;
+            new Thread(() -> {
+                phaser.arriveAndAwaitAdvance();
+                try {
+                    GameScore previous = em.putGameScore("user", "game", totalScore, true);
+                    if (previous.totalScore().equals(totalScore)) {
+                        replacedCount.incrementAndGet();
+                    } else {
+                        racedCount.incrementAndGet();
+                    }
+                } catch (Exception ex) {
+                    ex.printStackTrace();
+                }
+                phaser.arriveAndAwaitAdvance();
+                for (int j = 0; j < 5; j++) {
+                    Random rand = new Random();
+                    em.putGameScore("user", "game " + rand.nextInt(), rand.nextInt(), false);
+                }
+                phaser.arriveAndAwaitAdvance();
+            }).start();
+        }
+        phaser.arriveAndAwaitAdvance();
+        phaser.arriveAndAwaitAdvance();
+        System.err.format("Took %d msecs to insert with %d threads%n", System.currentTimeMillis() - startTime, threadCount);
+        assertEquals(1, replacedCount.get());
+        assertEquals(threadCount - 1, racedCount.get());
+        phaser.arriveAndAwaitAdvance();
+        System.err.format("Insertions finished%n");
+        assertEquals(1 + threadCount * 5, em.scanAllGameScore().count());
     }
 
     void step_310_insert_20_items() {
         for (int i = 0; i < 10; i++) {
-            em.putGameScore("user_" + i, "shooter blaster", Math.abs(i * 10));
+            em.putGameScore("user_" + i, "shooter blaster", Math.abs(i * 10), false);
         }
         for (int i = 5; i < 15; i++) {
-            em.putGameScore("user_" + i, "monster hunter", Math.abs(i * 20));
+            em.putGameScore("user_" + i, "monster hunter", Math.abs(i * 20), false);
         }
     }
 
@@ -101,8 +152,10 @@ public class IntegrationTest {
         test.step_104_insert_and_query_1_item_again();
         test.step_105_more_detailed_queries();
         test.step_106_update_item();
+        test.step_107_scan_items();
+        test.step_111_cache_item_tests();
+        test.step_201_raced_atomic_puts();
         test.step_310_insert_20_items();
     }
-
 
 }

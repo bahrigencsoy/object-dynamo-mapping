@@ -24,7 +24,10 @@ public class [(${project.factoryClass})] {
         return obj;
     }
 
-    public [(${item.name})] put[(${item.name})]( [# th:insert="~{all-attributes-types}"][/] )
+    /**
+      * Atomically puts an item or overwrite it.
+      */
+    public [(${item.name})] put[(${item.name})]( [# th:insert="~{all-attributes-types}"][/], boolean atomic )
     {
         if ([(${item.table.partitionKey.attribute})] == null) {
             throw new NullPointerException("Partition key \"[(${item.table.partitionKey.name})]\" is null");
@@ -42,20 +45,35 @@ public class [(${project.factoryClass})] {
             [(${item.name})].[(${attribute.helper})].contributeToMap(map, [(${attribute.attribute})]);
         }
 [/]
-        PutItemRequest putItemRequest = PutItemRequest.builder()
+        var builder = PutItemRequest.builder()
                             .tableName("[(${item.table.name})]")
-                            .item(map)
-                            .returnValues(ReturnValue.ALL_OLD)
-                            .build();
-        var response = client.putItem(putItemRequest);
-        if (response.hasAttributes()) {
-            // FIXME this means that there was a previous object with same key
-            // don't know what to do
-            var previousObject = __construct[(${item.name})](response.attributes());
+                            .item(map);
+        if (atomic) {
+            builder.conditionExpression("[(${item.table.putConditionExpression})]");
+            builder.returnValuesOnConditionCheckFailure(ReturnValuesOnConditionCheckFailure.ALL_OLD);
+        } else {
+            builder.returnValues(ReturnValue.ALL_OLD);
         }
-        var obj = __construct[(${item.name})](map);
-        obj._setClient(client);
-        return obj;
+
+        try {
+            var response = client.putItem(builder.build());
+            if (response.hasAttributes() && !atomic) {
+                map.putAll(response.attributes());
+            }
+            var obj = __construct[(${item.name})](map);
+            obj._setClient(client);
+            return obj;
+        } catch (ConditionalCheckFailedException e) {
+          if (e.hasItem() && atomic){
+              var previousObject = __construct[(${item.name})](e.item());
+              previousObject._setClient(client);
+              return previousObject;
+          } else {
+              throw e;
+          }
+      }
+
+
     }
 
      public Optional<[(${item.name})]> query[(${item.name})]( [# th:insert="~{key-attributes-types}"][/] )
@@ -117,6 +135,12 @@ public class [(${project.factoryClass})] {
         return new [(${item.name})]Query();
      }
 
+     public java.util.stream.Stream<[(${item.name})]> scanAll[(${item.name})]() {
+        var iterator = execute[(${item.name})]Scan(ScanRequest.builder().tableName("[(${item.table.name})]").build());
+        var split = Spliterators.spliteratorUnknownSize(iterator, Spliterator.ORDERED | Spliterator.IMMUTABLE | Spliterator.NONNULL);
+        return StreamSupport.stream(split, false);
+     }
+
      private Iterator<[(${item.name})]> execute[(${item.name})]Query(QueryRequest queryRequest){
         AtomicReference<QueryResponse> currentResponse = new AtomicReference<>(client.query(queryRequest));
         AtomicReference<Iterator<Map<String, AttributeValue>>> currentIterator = new AtomicReference<>(currentResponse.get().items().iterator());
@@ -147,6 +171,38 @@ public class [(${project.factoryClass})] {
             }
         };
      }
+
+     private Iterator<[(${item.name})]> execute[(${item.name})]Scan(ScanRequest scanRequest) {
+        AtomicReference<ScanResponse> currentResponse = new AtomicReference<>(client.scan(scanRequest));
+        AtomicReference<Iterator<Map<String, AttributeValue>>> currentIterator = new AtomicReference<>(
+                currentResponse.get().items().iterator());
+        return new Iterator<>() {
+            @Override
+            public boolean hasNext() {
+                if (currentIterator.get().hasNext()) {
+                    return true;
+                } else {
+                    if (currentResponse.get().hasLastEvaluatedKey()) {
+                        Map<String, AttributeValue> lastEvaluatedKey = currentResponse.get().lastEvaluatedKey();
+                        ScanRequest copy = scanRequest.copy(builder -> builder.exclusiveStartKey(lastEvaluatedKey));
+                        currentResponse.set(client.scan(copy));
+                        currentIterator.set(currentResponse.get().items().iterator());
+                        return true;
+                    } else {
+                        return false;
+                    }
+                }
+            }
+
+            @Override
+            public [(${item.name})] next() {
+                Map<String, AttributeValue> map = currentIterator.get().next();
+                var obj = __construct[(${item.name})](map);
+                obj._setClient(client);
+                return obj;
+            }
+        };
+    }
 [/]
 
 
