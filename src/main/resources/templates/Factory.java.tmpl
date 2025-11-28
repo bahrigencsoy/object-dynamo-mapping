@@ -182,6 +182,32 @@ public [(${item.name})]Query query[(${item.name})]By[(${#strings.capitalizeWords
      }
 [/]
 
+[# th:each="entry : ${item.table.localSecondaryIndexes}"]
+public [(${item.name})]Query query[(${item.name})]By[(${#strings.capitalizeWords(entry.value.attribute)})]([(${item.table.partitionKey.javaType})] [(${item.table.partitionKey.attribute})], [(${entry.value.javaType})] [(${entry.value.attribute})]) {
+        [(${item.name})]Query query = new [(${item.name})]Query(){
+
+            @Override
+            protected Map<String, Condition> selectMapForAttribute(String attribute) {
+                return switch (attribute) {
+                    case "[(${item.table.partitionKey.name})]" -> keyConditions;
+                    case "[(${entry.value.name})]" -> keyConditions;
+                [# th:each="attribute : ${item.allAttributes}"]
+                [# th:if="${attribute.name} != ${entry.value.name}"]
+                    case "[(${attribute.name})]" -> queryFilter;
+                [/]
+                [/]
+                    default -> throw new IllegalArgumentException("Unknown attribute '" + attribute + "'");
+                };
+            }
+        };
+        query._setTableName("[(${item.table.name})]");
+        query._setIndexName("[(${entry.key})]");
+        query.[(${entry.value.attribute})]().eq([(${entry.value.attribute})]);
+        query.[(${item.table.partitionKey.attribute})]().eq([(${item.table.partitionKey.attribute})]);
+        return query;
+     }
+[/]
+
      public java.util.stream.Stream<[(${item.name})]> scanAll[(${item.name})]() {
         var iterator = execute[(${item.name})]Scan(ScanRequest.builder().tableName("[(${item.table.name})]").build());
         var split = Spliterators.spliteratorUnknownSize(iterator, Spliterator.ORDERED | Spliterator.IMMUTABLE | Spliterator.NONNULL);
