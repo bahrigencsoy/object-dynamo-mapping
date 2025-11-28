@@ -5,6 +5,7 @@ import com.example.GameScoreEntityManager;
 import software.amazon.awssdk.http.apache.ApacheHttpClient;
 import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
+import software.amazon.awssdk.services.dynamodb.model.DynamoDbException;
 
 import java.util.Random;
 
@@ -44,21 +45,29 @@ public class IntegrationTest {
 
     void step_103_query_1_item() {
         assertFalse(em.queryGameScore(score.userId(), score.gameTitle()).isPresent());
+        assertFalse(em.queryGameScore().userId().eq("dava").totalScore().eq(10).execute().findFirst().isPresent());
     }
 
     void step_104_insert_and_query_1_item_again() {
         var newScore = em.putGameScore(score.userId(), score.gameTitle(), -1);
-        assertEquals(score.userId(), newScore.userId());
-        assertEquals(score.gameTitle(), newScore.gameTitle());
-        assertEquals(-1, newScore.totalScore());
+        assertNotEquals(score, newScore);
+        score = newScore;
         newScore = em.queryGameScore(score.userId(), score.gameTitle()).get();
-        assertEquals(score.userId(), newScore.userId());
-        assertEquals(score.gameTitle(), newScore.gameTitle());
-        assertEquals(-1, newScore.totalScore());
+        assertEquals(score, newScore);
+        newScore = em.queryGameScore().userId().eq(score.userId()).execute().findFirst().get();
+        assertEquals(score, newScore);
         newScore.mutator().delete();
     }
 
-    void step_105_update_item() {
+    void step_105_more_detailed_queries() {
+        assertThrows(DynamoDbException.class, () -> em.queryGameScore().execute());
+        em.putGameScore("aaa", "shooter blaster", 100);
+        em.putGameScore("aaa", "space traveler", 200);
+        assertEquals(2, em.queryGameScore().userId().eq("aaa").execute().count());
+        assertThrows(DynamoDbException.class, () -> em.queryGameScore().userId().ne("bbb").execute());
+    }
+
+    void step_106_update_item() {
         score = em.putGameScore("user", "my game", 100);
         score = em.queryGameScore("user", "my game").get();
         score.mutator().totalScore().setValue(200).commit();
@@ -90,7 +99,8 @@ public class IntegrationTest {
         test.step_102_delete_1_item();
         test.step_103_query_1_item();
         test.step_104_insert_and_query_1_item_again();
-        test.step_105_update_item();
+        test.step_105_more_detailed_queries();
+        test.step_106_update_item();
         test.step_310_insert_20_items();
     }
 

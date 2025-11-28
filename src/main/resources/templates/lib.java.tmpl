@@ -3,7 +3,7 @@ package [(${project.packageName})];
 import software.amazon.awssdk.core.SdkBytes;
 import software.amazon.awssdk.services.dynamodb.model.*;
 
-import java.util.Map;
+import java.util.*;
 
 class lib {
 
@@ -141,35 +141,43 @@ class lib {
         }
     }
 
-    public static class StringFieldMutator extends lib.FieldMutator {
+    public static class GenericQuery<T, P> {
+
         private final String attribute;
-        private final GameScore.Mutator parent;
-        private boolean delete = false;
-        private String value;
+        private final P parent;
+        private final AttributeHelper<T> helper;
+        private final Map<String, Condition> conditionMap;
 
-        public StringFieldMutator(String dynamoAttribute, GameScore.Mutator parent) {
-            this.attribute = dynamoAttribute;
+        GenericQuery(String attribute, P parent, AttributeHelper<T> helper, Map<String, Condition> conditionMap) {
             this.parent = parent;
+            this.attribute = attribute;
+            this.helper = helper;
+            this.conditionMap = conditionMap;
         }
 
-        public GameScore.Mutator setValue(String value) {
-            this.value = value;
+        private P singleValueComparison(ComparisonOperator op, T value){
+            AttributeValue.Builder builder = AttributeValue.builder();
+            helper.build(builder, value);
+            conditionMap.put(attribute, Condition.builder().comparisonOperator(op).attributeValueList(List.of(builder.build())).build());
             return parent;
         }
 
-        public GameScore.Mutator delete() {
-            this.delete = true;
+        public P eq(T value) {
+            return singleValueComparison(ComparisonOperator.EQ, value);
+        }
+
+        public P ne(T value) {
+            return singleValueComparison(ComparisonOperator.NE, value);
+        }
+
+        public P isNull() {
+            conditionMap.put(attribute, Condition.builder().comparisonOperator(ComparisonOperator.NULL).build());
             return parent;
         }
 
-        @Override
-        void accept(Map<String, AttributeValueUpdate> updatedValues) {
-            if (delete) {
-                updatedValues.put(attribute, AttributeValueUpdate.builder().action(AttributeAction.DELETE).build());
-            } else {
-                updatedValues.put(attribute, AttributeValueUpdate.builder()
-                        .value(AttributeValue.builder().s(value).build()).action(AttributeAction.PUT).build());
-            }
+        public P isNotNull() {
+            conditionMap.put(attribute, Condition.builder().comparisonOperator(ComparisonOperator.NOT_NULL).build());
+            return parent;
         }
     }
 

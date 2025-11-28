@@ -5,6 +5,7 @@ import software.amazon.awssdk.services.dynamodb.model.*;
 
 import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.stream.StreamSupport;
 
 import static [(${project.packageName})].lib.*;
 
@@ -78,6 +79,44 @@ public class [(${project.factoryClass})] {
         return Optional.of(obj);
      }
 
+     public class [(${item.name})]Query {
+        private final QueryRequest.Builder builder;
+        private final Map<String, Condition> keyConditions;
+        private final Map<String, Condition> queryFilter;
+
+        private [(${item.name})]Query() {
+            this.builder = QueryRequest.builder().tableName("[(${item.table.name})]");
+            this.keyConditions = new LinkedHashMap<>();
+            this.queryFilter = new LinkedHashMap<>();
+        }
+
+[# th:each="attribute : ${item.table.keyAttributes}"]
+        public lib.GenericQuery<[(${attribute.javaType})],[(${item.name})]Query> [(${attribute.attribute})]() {
+            return new lib.GenericQuery<>("[(${attribute.name})]", this, [(${item.name})].[(${attribute.helper})], keyConditions);
+        }
+[/]
+[# th:each="attribute : ${item.derivedAttributes}"]
+        public lib.GenericQuery<[(${attribute.javaType})],[(${item.name})]Query> [(${attribute.attribute})]() {
+            return new lib.GenericQuery<>("[(${attribute.name})]", this, [(${item.name})].[(${attribute.helper})], queryFilter);
+        }
+[/]
+        public java.util.stream.Stream<[(${item.name})]> execute() {
+            if (!keyConditions.isEmpty()) {
+                builder.keyConditions(keyConditions);
+            }
+            if (!queryFilter.isEmpty()) {
+                builder.queryFilter(queryFilter);
+            }
+            var iterator = execute[(${item.name})]Query(builder.build());
+            var split = Spliterators.spliteratorUnknownSize(iterator, Spliterator.ORDERED | Spliterator.IMMUTABLE | Spliterator.NONNULL);
+            return StreamSupport.stream(split, false);
+        }
+     }
+
+     public [(${item.name})]Query query[(${item.name})]() {
+        return new [(${item.name})]Query();
+     }
+
      private Iterator<[(${item.name})]> execute[(${item.name})]Query(QueryRequest queryRequest){
         AtomicReference<QueryResponse> currentResponse = new AtomicReference<>(client.query(queryRequest));
         AtomicReference<Iterator<Map<String, AttributeValue>>> currentIterator = new AtomicReference<>(currentResponse.get().items().iterator());
@@ -102,7 +141,9 @@ public class [(${project.factoryClass})] {
             @Override
             public [(${item.name})] next() {
                 Map<String, AttributeValue> map = currentIterator.get().next();
-                return __construct[(${item.name})](map);
+                var obj = __construct[(${item.name})](map);
+                obj._setClient(client);
+                return obj;
             }
         };
      }
