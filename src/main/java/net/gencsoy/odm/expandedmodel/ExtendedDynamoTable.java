@@ -20,4 +20,10 @@ public class ExtendedDynamoTable extends DynamoTable {
     public boolean hasSortKey() {
         return getSortKey() != null;
     }
+
+    public List<DynamoAttribute> getSortAttributes() {
+        List<DynamoAttribute> list = getKeyAttributes();
+        list.addAll(getLocalSecondaryIndexes().values());
+        return list;
+    }
 }

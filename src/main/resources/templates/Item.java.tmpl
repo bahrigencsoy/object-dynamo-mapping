@@ -7,7 +7,7 @@ import java.util.*;
 
 import static [(${project.packageName})].lib.*;
 
-public class [(${item.name})] {
+public class [(${item.name})] implements Comparable<[(${item.name})]> {
 [# th:each="attribute : ${item.allAttributes}"]
     private final [(${attribute.javaType})] [(${attribute.attribute})];
 [/]
@@ -78,6 +78,34 @@ public class [(${item.name})] {
             var response = client.deleteItem(request);
         }
     }
+
+    @Override
+    public boolean equals(Object o) {
+        if (o == null || getClass() != o.getClass()) return false;
+        if (o == this) return true;
+        [(${item.name})] other = ([(${item.name})]) o;
+        return [# th:each="attribute, iterStat : ${item.allAttributes}"]Objects.equals([(${attribute.attribute})], other.[(${attribute.attribute})]) [(${iterStat.last}?'':'&& ')][/];
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash([# th:insert="~{all-attributes-no-types}"/]);
+    }
+
+    @Override
+    public int compareTo([(${item.name})] o) {
+        int c;
+[# th:each="attribute : ${item.table.sortAttributes}"]
+        if (this.[(${attribute.attribute})] == null && o.[(${attribute.attribute})]==null) return 0;
+        if (this.[(${attribute.attribute})] == null) return 1;
+        if (o.[(${attribute.attribute})] == null) return -1;
+        if (( c = this.[(${attribute.attribute})].compareTo(o.[(${attribute.attribute})]))!=0) {
+            return c;
+        }
+[/]
+        return 0;
+    }
+
 
 [# th:each="attribute : ${item.allAttributes}"]
     static final lib.AttributeHelper<[(${attribute.javaType})]> [(${attribute.helper})] = new lib.[(${attribute.helperClass})]("[(${attribute.name})]");
