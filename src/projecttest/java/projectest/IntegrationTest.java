@@ -1,5 +1,6 @@
 package projectest;
 
+import com.example.CacheResource;
 import com.example.GameScore;
 import com.example.GameScoreEntityManager;
 import software.amazon.awssdk.http.apache.ApacheHttpClient;
@@ -64,8 +65,8 @@ public class IntegrationTest {
 
     void step_105_more_detailed_queries() {
         assertThrows(DynamoDbException.class, () -> em.queryGameScoreByUserId(null).execute());
-        em.putGameScore("aaa", "shooter blaster", "shooter",100, false);
-        em.putGameScore("aaa", "space traveler", "shooter",200, false);
+        em.putGameScore("aaa", "shooter blaster", "shooter", 100, false);
+        em.putGameScore("aaa", "space traveler", "shooter", 200, false);
         assertEquals(2, em.queryGameScoreByUserId("aaa").execute().count());
         assertThrows(DynamoDbException.class, () -> em.queryGameScoreByUserId("bbb").userId().ne("xxx").execute());
     }
@@ -117,7 +118,7 @@ public class IntegrationTest {
                 phaser.arriveAndAwaitAdvance();
                 for (int j = 0; j < 5; j++) {
                     Random rand = new Random();
-                    em.putGameScore("user", "game " + rand.nextInt(), "x"+rand.nextInt(3), rand.nextInt(), false);
+                    em.putGameScore("user", "game " + rand.nextInt(), "x" + rand.nextInt(3), rand.nextInt(), false);
                 }
                 phaser.arriveAndAwaitAdvance();
             }).start();
@@ -130,6 +131,23 @@ public class IntegrationTest {
         phaser.arriveAndAwaitAdvance();
         System.err.format("Insertions finished%n");
         assertEquals(1 + threadCount * 5, em.scanAllGameScore().count());
+    }
+
+    void step_300_query_by_global_secondary_index() {
+        assertEquals(0, em.scanAllCacheResource().count());
+        em.putCacheResource("key", "uniq1", new byte[]{1, 2, 3}, true);
+        assertEquals(1, em.queryCacheResourceByUniqueId("uniq1").execute().count());
+        CacheResource resource = em.queryCacheResourceByUniqueId("uniq1").execute().findFirst().get();
+        assertArrayEquals(new byte[]{1, 2, 3}, resource.data());
+        em.putCacheResource("key2", "uniq1", new byte[]{4, 5, 6}, true);
+        em.putCacheResource("key3", "uniq2", new byte[]{7, 8, 9}, true);
+        assertEquals(2, em.queryCacheResourceByUniqueId("uniq1").execute().count());
+        assertThrows(DynamoDbException.class, () -> em.queryCacheResourceByUniqueId("uniq1").uniqueId().ne("uniq1").execute());
+        assertArrayEquals(new byte[]{7, 8, 9}, em.queryCacheResourceByKey("key3").uniqueId().ne("x").execute().findFirst().get().data());
+    }
+
+    void step_301_query_by_local_secondary_index() {
+
     }
 
     public static void main(String[] args) {
@@ -146,6 +164,7 @@ public class IntegrationTest {
         test.step_107_scan_items();
         test.step_111_cache_item_tests();
         test.step_201_raced_atomic_puts();
+        test.step_300_query_by_global_secondary_index();
     }
 
 }

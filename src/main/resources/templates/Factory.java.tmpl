@@ -153,11 +153,34 @@ public class [(${project.factoryClass})] {
                 };
             }
         };
-
         query._setTableName("[(${item.table.name})]");
         query.[(${item.table.partitionKey.attribute})]().eq([(${item.table.partitionKey.attribute})]);
         return query;
      }
+
+[# th:each="entry : ${item.table.globalSecondaryIndexes}"]
+public [(${item.name})]Query query[(${item.name})]By[(${#strings.capitalizeWords(entry.value.attribute)})]([(${entry.value.javaType})] [(${entry.value.attribute})]) {
+        [(${item.name})]Query query = new [(${item.name})]Query(){
+
+            @Override
+            protected Map<String, Condition> selectMapForAttribute(String attribute) {
+                return switch (attribute) {
+                    case "[(${entry.value.name})]" -> keyConditions;
+                [# th:each="attribute : ${item.allAttributes}"]
+                [# th:if="${attribute.name} != ${entry.value.name}"]
+                    case "[(${attribute.name})]" -> queryFilter;
+                [/]
+                [/]
+                    default -> throw new IllegalArgumentException("Unknown attribute '" + attribute + "'");
+                };
+            }
+        };
+        query._setTableName("[(${item.table.name})]");
+        query._setIndexName("[(${entry.key})]");
+        query.[(${entry.value.attribute})]().eq([(${entry.value.attribute})]);
+        return query;
+     }
+[/]
 
      public java.util.stream.Stream<[(${item.name})]> scanAll[(${item.name})]() {
         var iterator = execute[(${item.name})]Scan(ScanRequest.builder().tableName("[(${item.table.name})]").build());

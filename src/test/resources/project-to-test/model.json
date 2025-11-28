@@ -44,7 +44,7 @@
         "attribute": "key"
       },
       "globalSecondaryIndexes": {
-        "cache_id_ix": {
+        "cache_id_idx": {
           "name": "cached_item_unique_id",
           "type": "STRING",
           "attribute": "uniqueId"
