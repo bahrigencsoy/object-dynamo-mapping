@@ -143,11 +143,12 @@ public class [(${project.factoryClass})] {
             @Override
             protected Map<String, Condition> selectMapForAttribute(String attribute) {
                 return switch (attribute) {
+                    case "fix_me" -> keyConditions;
                 [# th:each="attribute : ${item.table.keyAttributes}"]
-                    case "[(${attribute.name})]" -> keyConditions;
+                    // case "[(${attribute.name})]" -> keyConditions;
                 [/]
                 [# th:each="attribute : ${item.derivedAttributes}"]
-                    case "[(${attribute.name})]" -> queryFilter;
+                    // case "[(${attribute.name})]" -> queryFilter;
                 [/]
                     default -> throw new IllegalArgumentException("Unknown attribute '" + attribute + "'");
                 };
@@ -165,10 +166,11 @@ public [(${item.name})]Query query[(${item.name})]By[(${#strings.capitalizeWords
             @Override
             protected Map<String, Condition> selectMapForAttribute(String attribute) {
                 return switch (attribute) {
-                    case "[(${entry.value.name})]" -> keyConditions;
+                    case "fix_me" -> keyConditions;
+                    // case "[(${entry.value.name})]" -> keyConditions;
                 [# th:each="attribute : ${item.allAttributes}"]
                 [# th:if="${attribute.name} != ${entry.value.name}"]
-                    case "[(${attribute.name})]" -> queryFilter;
+                    // case "[(${attribute.name})]" -> queryFilter;
                 [/]
                 [/]
                     default -> throw new IllegalArgumentException("Unknown attribute '" + attribute + "'");
@@ -189,11 +191,12 @@ public [(${item.name})]Query query[(${item.name})]By[(${#strings.capitalizeWords
             @Override
             protected Map<String, Condition> selectMapForAttribute(String attribute) {
                 return switch (attribute) {
-                    case "[(${item.table.partitionKey.name})]" -> keyConditions;
-                    case "[(${entry.value.name})]" -> keyConditions;
+                    case "fix_me" -> keyConditions;
+                    //case "[(${item.table.partitionKey.name})]" -> keyConditions;
+                    //case "[(${entry.value.name})]" -> keyConditions;
                 [# th:each="attribute : ${item.allAttributes}"]
                 [# th:if="${attribute.name} != ${entry.value.name}"]
-                    case "[(${attribute.name})]" -> queryFilter;
+                    //case "[(${attribute.name})]" -> queryFilter;
                 [/]
                 [/]
                     default -> throw new IllegalArgumentException("Unknown attribute '" + attribute + "'");
