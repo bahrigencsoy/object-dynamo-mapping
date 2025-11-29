@@ -29,9 +29,6 @@ public class ExtendedDynamoTable extends DynamoTable {
             return;
         }
         DynamoAttribute att = findAttributeByName(attributeName);
-        if (att == null) {
-            throw new IllegalArgumentException("Attribute '" + attributeName + "' not found");
-        }
         if (!list.contains(att)) {
             list.add(att);
         }
@@ -58,8 +55,41 @@ public class ExtendedDynamoTable extends DynamoTable {
     }
 
     public List<IndexDescriptor> getIndexDescriptors() {
-        // FIXME
         List<IndexDescriptor> list = new ArrayList<>();
+        IndexDescriptor primary = new IndexDescriptor(getAttributes());
+        primary.setKeyAttribute(getPartitionKey());
+        primary.setKeyAttributes(getKeyAttributes());
+        primary.setQueryAttribute(getPartitionKey());
+        list.add(primary);
+        for (DynamoIndex index : getIndexes()) {
+            if (index.getPartitionKey() == null && index.getSortKey() == null) {
+                throw new IllegalStateException("Index '" + index.getName() + "' is invalid");
+            }
+            IndexDescriptor desc = new IndexDescriptor(getAttributes());
+            if (index.getPartitionKey() != null) {
+                // Global secondary index - GSI
+                desc.setKeyAttribute(findAttributeByName(index.getPartitionKey()));
+                List<DynamoAttribute> keyAttributes = new ArrayList<>();
+                keyAttributes.add(findAttributeByName(index.getPartitionKey()));
+                if (index.getSortKey() != null) {
+                    keyAttributes.add(findAttributeByName(index.getSortKey()));
+                }
+                desc.setKeyAttributes(keyAttributes);
+                desc.setQueryAttribute(findAttributeByName(index.getPartitionKey()));
+                desc.setIndexName(index.getName());
+                list.add(desc);
+            } else {
+                // Local secondary index
+                desc.setKeyAttribute(getPartitionKey());
+                List<DynamoAttribute> keyAttributes = new ArrayList<>();
+                keyAttributes.add(getPartitionKey());
+                keyAttributes.add(findAttributeByName(index.getSortKey()));
+                desc.setKeyAttributes(keyAttributes);
+                desc.setQueryAttribute(findAttributeByName(index.getSortKey()));
+                desc.setIndexName(index.getName());
+                list.add(desc);
+            }
+        }
         /*
         for (DynamoItem item : getItems()) {
             IndexDescriptor primaryDescriptor = new IndexDescriptor();
@@ -76,24 +106,27 @@ public class ExtendedDynamoTable extends DynamoTable {
         return list;
     }
 
+    private boolean attributeExists(String name) {
+        return getAttributes().stream()
+                .anyMatch(at -> Objects.equals(at.getName(), name));
+    }
+
     private DynamoAttribute findAttributeByName(String name) {
         return getAttributes().stream()
                 .filter(at -> Objects.equals(at.getName(), name))
                 .findFirst()
-                .orElse(null);
+                .orElseThrow(() -> new IllegalStateException("no attribute named '" + name + "'"));
     }
 
     public DynamoAttribute getPartitionKey() {
-        return Optional.ofNullable(findAttributeByName(getPrimaryKey().getPartitionKey()))
-                .orElseThrow(() -> new IllegalStateException("No partition key"));
+        return findAttributeByName(getPrimaryKey().getPartitionKey());
     }
 
     public DynamoAttribute getSortKey() {
         if (getPrimaryKey().getSortKey() == null) {
             return null;
         } else {
-            return Optional.ofNullable(findAttributeByName(getPrimaryKey().getSortKey()))
-                    .orElseThrow(() -> new IllegalStateException("could not found sort key: '"+getPrimaryKey().getSortKey()+"'"));
+            return findAttributeByName(getPrimaryKey().getSortKey());
         }
     }
 }

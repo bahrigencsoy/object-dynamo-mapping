@@ -28,7 +28,7 @@ public class Usage {
     }
 
     void queryAndUpdateEntity() {
-        GameScore score = em.queryGameScore("user_10", "Another World").get();
+        GameScore score = em.findGameScore("user_10", "Another World").get();
 
         score.mutator()
                 .totalScore().setValue(123)
@@ -47,10 +47,6 @@ public class Usage {
     {
       "name": "game_scores_odm_test",
       "javaClass": "GameScore",
-      "primaryKey": {
-        "partitionKey": "user_id",
-        "sortKey": "gameTitle"
-      },
       "attributes": [
         {
           "name": "user_id",
@@ -63,74 +59,57 @@ public class Usage {
           "attribute": "gameTitle"
         },
         {
+          "name": "game_genre",
+          "type": "STRING",
+          "attribute": "gameGenre"
+        },
+        {
           "name": "total_score",
           "type": "NUMBER",
           "attribute": "totalScore",
           "javaType": "Integer"
         }
       ],
+      "primaryKey": {
+        "partitionKey": "user_id",
+        "sortKey": "game_title"
+      },
       "indexes": [
         {
           "name": "game_genres_idx",
           "sortKey": "game_genre",
           "_comment": "^^ no partition key means that this is a local secondary index"
         }
-      ],
-      "partitionKey": {
-        "name": "user_id",
-        "type": "STRING",
-        "attribute": "userId"
-      },
-      "sortKey": {
-        "name": "game_title",
-        "type": "STRING",
-        "attribute": "gameTitle"
-      },
-      "localSecondaryIndexes": {
-        "game_genres_idx": {
-          "name": "game_genre",
-          "type": "STRING",
-          "attribute": "gameGenre"
-        }
-      },
-      "items": [
-        {
-          "name": "GameScore",
-          "attributes": [
-            {
-              "name": "total_score",
-              "type": "NUMBER",
-              "attribute": "totalScore",
-              "javaType": "Integer"
-            }
-          ]
-        }
       ]
     },
     {
       "name": "cached_resource_odm_test",
-      "partitionKey": {
-        "name": "cache_item_key",
-        "type": "STRING",
-        "attribute": "key"
-      },
-      "globalSecondaryIndexes": {
-        "cache_id_idx": {
+      "javaClass": "CacheResource",
+      "attributes": [
+        {
+          "name": "cache_item_key",
+          "type": "STRING",
+          "attribute": "key"
+        },
+        {
+          "name": "cached_data",
+          "type": "BINARY",
+          "attribute": "data"
+        },
+        {
           "name": "cached_item_unique_id",
           "type": "STRING",
           "attribute": "uniqueId"
         }
+      ],
+      "primaryKey": {
+        "partitionKey": "cache_item_key"
       },
-      "items": [
+      "indexes": [
         {
-          "name": "CacheResource",
-          "attributes": [
-            {
-              "name": "cached_data",
-              "type": "BINARY",
-              "attribute": "data"
-            }
-          ]
+          "name": "cache_id_idx",
+          "partitionKey": "cached_item_unique_id",
+          "_comment": "^^ no sort key means that this is a global secondary index"
         }
       ]
     }

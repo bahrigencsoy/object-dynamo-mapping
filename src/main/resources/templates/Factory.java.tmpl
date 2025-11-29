@@ -137,28 +137,33 @@ public class [(${project.factoryClass})] {
         }
      }
 
-     public [(${table.javaClass})]Query query[(${table.javaClass})]By[(${#strings.capitalizeWords(table.partitionKey.attribute)})]([(${table.partitionKey.javaType})] [(${table.partitionKey.attribute})]) {
+[# th:each="index : ${table.indexDescriptors}"]
+public [(${table.javaClass})]Query query[(${table.javaClass})]By[(${#strings.capitalizeWords(index.queryAttribute.attribute)})]([# th:if="${index.keyAttribute} != null"][(${index.keyAttribute.javaType})] [(${index.keyAttribute.attribute})][/]) {
         [(${table.javaClass})]Query query = new [(${table.javaClass})]Query(){
 
             @Override
             protected Map<String, Condition> selectMapForAttribute(String attribute) {
                 return switch (attribute) {
-                    case "fix_me" -> keyConditions;
-                [# th:each="attribute : ${table.attributes}"]
-                    // case "[(${attribute.name})]" -> keyConditions;
+                [# th:each="attribute : ${index.keyAttributes}"]
+                    case "[(${attribute.name})]" -> keyConditions;
                 [/]
-                [# th:each="attribute : ${table.attributes}"]
-                    // case "[(${attribute.name})]" -> queryFilter;
+                [# th:each="attribute : ${index.queryAttributes}"]
+                    case "[(${attribute.name})]" -> queryFilter;
                 [/]
                     default -> throw new IllegalArgumentException("Unknown attribute '" + attribute + "'");
                 };
             }
         };
         query._setTableName("[(${table.name})]");
-        query.[(${table.partitionKey.attribute})]().eq([(${table.partitionKey.attribute})]);
+        [# th:if="${index.indexName} != null"]
+        query._setIndexName("[(${index.indexName})]");
+        [/]
+        [# th:if="${index.keyAttribute} != null"]
+        query.[(${index.keyAttribute.attribute})]().eq([(${index.keyAttribute.attribute})]);
+        [/]
         return query;
      }
-
+[/]
 
 
      public java.util.stream.Stream<[(${table.javaClass})]> scanAll[(${table.javaClass})]() {

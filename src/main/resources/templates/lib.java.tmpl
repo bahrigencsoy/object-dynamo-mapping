@@ -179,6 +179,10 @@ class lib {
             conditionMap.put(attribute, Condition.builder().comparisonOperator(ComparisonOperator.NOT_NULL).build());
             return parent;
         }
+
+        public P beginsWith(T value) {
+            return singleValueComparison(ComparisonOperator.BEGINS_WITH, value);
+        }
     }
 
     abstract static class FieldMutator {
