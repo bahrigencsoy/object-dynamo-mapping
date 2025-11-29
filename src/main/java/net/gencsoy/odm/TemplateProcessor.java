@@ -1,6 +1,6 @@
 package net.gencsoy.odm;
 
-import net.gencsoy.odm.expandedmodel.ExtendedDynamoItem;
+import net.gencsoy.odm.expandedmodel.ExtendedDynamoTable;
 import net.gencsoy.odm.inputmodel.OdmProject;
 import org.thymeleaf.TemplateEngine;
 import org.thymeleaf.context.Context;
@@ -44,10 +44,10 @@ public class TemplateProcessor {
         return templateEngine.process("lib.java", context);
     }
 
-    public String processItem(OdmProject project, ExtendedDynamoItem item) {
+    public String processTable(OdmProject project, ExtendedDynamoTable table) {
         var context = new Context();
         context.setVariable("project", project);
-        context.setVariable("item", item);
+        context.setVariable("table", table);
         return templateEngine.process("Item.java", context);
     }
 }

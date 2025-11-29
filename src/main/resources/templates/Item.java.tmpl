@@ -7,17 +7,17 @@ import java.util.*;
 
 import static [(${project.packageName})].lib.*;
 
-public class [(${item.name})] implements Comparable<[(${item.name})]> {
-[# th:each="attribute : ${item.allAttributes}"]
+public class [(${table.javaClass})] implements Comparable<[(${table.javaClass})]> {
+[# th:each="attribute : ${table.attributes}"]
     private final [(${attribute.javaType})] [(${attribute.attribute})];
 [/]
     private transient DynamoDbClient _client;
 
-    [(${item.name})](Builder b)
-    {[# th:each="attribute : ${item.allAttributes}"]
+    [(${table.javaClass})](Builder b)
+    {[# th:each="attribute : ${table.attributes}"]
         this.[(${attribute.attribute})] = b.[(${attribute.attribute})];[/]
     }
-[# th:each="attribute : ${item.allAttributes}"]
+[# th:each="attribute : ${table.attributes}"]
     public [(${attribute.javaType})] [(${attribute.attribute})]() {
         return [(${attribute.attribute})];
     }
@@ -45,7 +45,7 @@ public class [(${item.name})] implements Comparable<[(${item.name})]> {
             this.key = Map.copyOf(key);
         }
 
-[# th:each="attribute : ${item.derivedAttributes}"]
+[# th:each="attribute : ${table.attributes}"]
         public GenericMutator<[(${attribute.javaType})], Mutator> [(${attribute.attribute})]() {
             var mutator = new GenericMutator<>("[(${attribute.name})]", this, [(${attribute.helper})]);
             mutators.add(mutator);
@@ -53,20 +53,20 @@ public class [(${item.name})] implements Comparable<[(${item.name})]> {
         }
 [/]
 
-        public [(${item.name})] commit() {
+        public [(${table.javaClass})] commit() {
              HashMap<String,AttributeValueUpdate> updatedValues = new HashMap<>();
              for (var mutator:mutators) {
                 mutator.accept(updatedValues);
              }
              var updateItemRequest = UpdateItemRequest.builder().
                                      key(key)
-                                     .tableName("[(${item.table.name})]")
+                                     .tableName("[(${table.name})]")
                                      .attributeUpdates(updatedValues)
                                      .returnValues(ReturnValue.ALL_NEW)
                                      .build();
               UpdateItemResponse response = client.updateItem(updateItemRequest);
               Map<String, AttributeValue> map = response.attributes();
-              [(${item.name})].Builder builder = [(${item.name})].builder();
+              [(${table.javaClass})].Builder builder = [(${table.javaClass})].builder();
 [# th:insert="~{construct-object}"][/]
               var obj = builder.build();
               obj._setClient(client);
@@ -74,7 +74,7 @@ public class [(${item.name})] implements Comparable<[(${item.name})]> {
         }
 
         public void delete() {
-            DeleteItemRequest request = DeleteItemRequest.builder().tableName("[(${item.table.name})]").key(key).build();
+            DeleteItemRequest request = DeleteItemRequest.builder().tableName("[(${table.name})]").key(key).build();
             var response = client.deleteItem(request);
         }
     }
@@ -83,8 +83,8 @@ public class [(${item.name})] implements Comparable<[(${item.name})]> {
     public boolean equals(Object o) {
         if (o == null || getClass() != o.getClass()) return false;
         if (o == this) return true;
-        [(${item.name})] other = ([(${item.name})]) o;
-        return [# th:each="attribute, iterStat : ${item.allAttributes}"]Objects.equals([(${attribute.attribute})], other.[(${attribute.attribute})]) [(${iterStat.last}?'':'&& ')][/];
+        [(${table.javaClass})] other = ([(${table.javaClass})]) o;
+        return [# th:each="attribute, iterStat : ${table.attributes}"]Objects.equals([(${attribute.attribute})], other.[(${attribute.attribute})]) [(${iterStat.last}?'':'&& ')][/];
     }
 
     @Override
@@ -93,9 +93,9 @@ public class [(${item.name})] implements Comparable<[(${item.name})]> {
     }
 
     @Override
-    public int compareTo([(${item.name})] o) {
+    public int compareTo([(${table.javaClass})] o) {
         int c;
-[# th:each="attribute : ${item.table.sortAttributes}"]
+[# th:each="attribute : ${table.sortAttributes}"]
         if (this.[(${attribute.attribute})] == null && o.[(${attribute.attribute})]==null) return 0;
         if (this.[(${attribute.attribute})] == null) return 1;
         if (o.[(${attribute.attribute})] == null) return -1;
@@ -107,25 +107,25 @@ public class [(${item.name})] implements Comparable<[(${item.name})]> {
     }
 
 
-[# th:each="attribute : ${item.allAttributes}"]
+[# th:each="attribute : ${table.attributes}"]
     static final lib.AttributeHelper<[(${attribute.javaType})]> [(${attribute.helper})] = new lib.[(${attribute.helperClass})]("[(${attribute.name})]");
 [/]
 
     public static Builder builder() { return new Builder(); }
 
     public static final class Builder {
-[# th:each="attribute : ${item.allAttributes}"]
+[# th:each="attribute : ${table.attributes}"]
         private [(${attribute.javaType})] [(${attribute.attribute})];
 [/]
         private Builder() {}
-[# th:each="attribute : ${item.allAttributes}"]
+[# th:each="attribute : ${table.attributes}"]
         public Builder [(${attribute.attribute})]([(${attribute.javaType})] [(${attribute.attribute})]) {
             this.[(${attribute.attribute})] = [(${attribute.attribute})];
             return this;
         }
 [/]
-        public [(${item.name})] build() {
-            return new [(${item.name})](this);
+        public [(${table.javaClass})] build() {
+            return new [(${table.javaClass})](this);
         }
     }
 

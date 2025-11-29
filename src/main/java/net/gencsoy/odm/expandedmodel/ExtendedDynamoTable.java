@@ -1,7 +1,6 @@
 package net.gencsoy.odm.expandedmodel;
 
 import net.gencsoy.odm.inputmodel.DynamoAttribute;
-import net.gencsoy.odm.inputmodel.DynamoItem;
 import net.gencsoy.odm.inputmodel.DynamoTable;
 
 import java.util.ArrayList;
@@ -39,7 +38,9 @@ public class ExtendedDynamoTable extends DynamoTable {
     }
 
     public List<IndexDescriptor> getIndexDescriptors() {
+        // FIXME
         List<IndexDescriptor> list = new ArrayList<>();
+        /*
         for (DynamoItem item : getItems()) {
             IndexDescriptor primaryDescriptor = new IndexDescriptor();
             primaryDescriptor.getKeyAttributes().add(getPartitionKey());
@@ -50,6 +51,30 @@ public class ExtendedDynamoTable extends DynamoTable {
             primaryDescriptor.setItem(item);
             list.add(primaryDescriptor);
         }
+
+         */
+        return list;
+    }
+
+    public List<DynamoAttribute> getAllAttributes() {
+        // FIXME
+        List<DynamoAttribute> list = new ArrayList<>();
+        list.add(getPartitionKey());
+        if (getSortKey() != null) {
+            list.add(getSortKey());
+        }
+        list.addAll(getGlobalSecondaryIndexes().values());
+        list.addAll(getLocalSecondaryIndexes().values());
+        list.addAll(getAttributes());
+        return list;
+    }
+
+    public List<DynamoAttribute> getDerivedAttributes() {
+        // FIXME
+        List<DynamoAttribute> list = new ArrayList<>();
+        list.addAll(getGlobalSecondaryIndexes().values());
+        list.addAll(getLocalSecondaryIndexes().values());
+        list.addAll(super.getAttributes());
         return list;
     }
 }

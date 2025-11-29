@@ -1,6 +1,6 @@
-[# th:each="attribute : ${item.allAttributes}"]
+[# th:each="attribute : ${table.attributes}"]
         if (map.containsKey("[(${attribute.name})]")) {
-            builder.[(${attribute.attribute})]([(${item.name})].[(${attribute.helper})].extractFromMap(map));
+            builder.[(${attribute.attribute})]([(${table.javaClass})].[(${attribute.helper})].extractFromMap(map));
         }
 [/]
 

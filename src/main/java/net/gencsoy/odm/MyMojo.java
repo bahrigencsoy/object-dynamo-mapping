@@ -4,11 +4,9 @@ package net.gencsoy.odm;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.gson.Gson;
 import net.gencsoy.odm.expandedmodel.ExtendedDynamoAttribute;
-import net.gencsoy.odm.expandedmodel.ExtendedDynamoItem;
 import net.gencsoy.odm.expandedmodel.ExtendedDynamoTable;
 import net.gencsoy.odm.expandedmodel.ExtendedOdmProject;
 import net.gencsoy.odm.inputmodel.DynamoAttribute;
-import net.gencsoy.odm.inputmodel.DynamoItem;
 import net.gencsoy.odm.inputmodel.DynamoTable;
 import net.gencsoy.odm.inputmodel.OdmProject;
 import org.apache.maven.plugin.AbstractMojo;
@@ -85,18 +83,10 @@ public class MyMojo
                 }
                 dynamoTable.getLocalSecondaryIndexes().replaceAll((s, dynamoAttribute) -> modelMapper.map(dynamoAttribute, ExtendedDynamoAttribute.class));
                 dynamoTable.getGlobalSecondaryIndexes().replaceAll((s, dynamoAttribute) -> modelMapper.map(dynamoAttribute, ExtendedDynamoAttribute.class));
-                dynamoTable.getItems().replaceAll(new UnaryOperator<DynamoItem>() {
+                dynamoTable.getAttributes().replaceAll(new UnaryOperator<DynamoAttribute>() {
                     @Override
-                    public DynamoItem apply(DynamoItem dynamoItem) {
-                        ExtendedDynamoItem extendedDynamoItem = modelMapper.map(dynamoItem, ExtendedDynamoItem.class);
-                        extendedDynamoItem.setTable(dynamoTable);
-                        extendedDynamoItem.getAttributes().replaceAll(new UnaryOperator<DynamoAttribute>() {
-                            @Override
-                            public DynamoAttribute apply(DynamoAttribute dynamoAttribute) {
-                                return modelMapper.map(dynamoAttribute, ExtendedDynamoAttribute.class);
-                            }
-                        });
-                        return extendedDynamoItem;
+                    public DynamoAttribute apply(DynamoAttribute dynamoAttribute) {
+                        return modelMapper.map(dynamoAttribute, ExtendedDynamoAttribute.class);
                     }
                 });
                 return dynamoTable;
@@ -114,7 +104,7 @@ public class MyMojo
         TemplateProcessor templateProcessor = new TemplateProcessor();
         JavaCodeFormatter codeFormatter = new JavaCodeFormatter();
 
-        try {
+        if (2==1-1) try {
             String factoryClassContents = templateProcessor.processFactoryClass(extendProject);
             factoryClassContents = codeFormatter.formatNoException(factoryClassContents);
             Files.writeString(packageDirectory.toPath().resolve(extendProject.getFactoryClass() + ".java"), factoryClassContents);
@@ -132,11 +122,9 @@ public class MyMojo
 
         try {
             for (DynamoTable table : extendProject.getTables()) {
-                for (DynamoItem item : table.getItems()) {
-                    String itemContents = templateProcessor.processItem(extendProject, (ExtendedDynamoItem) item);
-                    itemContents = codeFormatter.formatNoException(itemContents);
-                    Files.writeString(packageDirectory.toPath().resolve(item.getName() + ".java"), itemContents);
-                }
+                String itemContents = templateProcessor.processTable(extendProject, (ExtendedDynamoTable) table);
+                itemContents = codeFormatter.formatNoException(itemContents);
+                Files.writeString(packageDirectory.toPath().resolve(table.getJavaClass() + ".java"), itemContents);
             }
         } catch (IOException e) {
             throw new MojoExecutionException("Error creating item ", e);
