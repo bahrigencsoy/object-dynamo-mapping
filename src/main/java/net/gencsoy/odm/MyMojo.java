@@ -77,12 +77,6 @@ public class MyMojo
             @Override
             public DynamoTable apply(DynamoTable input) {
                 ExtendedDynamoTable dynamoTable = modelMapper.map(input, ExtendedDynamoTable.class);
-                dynamoTable.setPartitionKey(modelMapper.map(dynamoTable.getPartitionKey(), ExtendedDynamoAttribute.class));
-                if (dynamoTable.getSortKey() != null) {
-                    dynamoTable.setSortKey(modelMapper.map(dynamoTable.getSortKey(), ExtendedDynamoAttribute.class));
-                }
-                dynamoTable.getLocalSecondaryIndexes().replaceAll((s, dynamoAttribute) -> modelMapper.map(dynamoAttribute, ExtendedDynamoAttribute.class));
-                dynamoTable.getGlobalSecondaryIndexes().replaceAll((s, dynamoAttribute) -> modelMapper.map(dynamoAttribute, ExtendedDynamoAttribute.class));
                 dynamoTable.getAttributes().replaceAll(new UnaryOperator<DynamoAttribute>() {
                     @Override
                     public DynamoAttribute apply(DynamoAttribute dynamoAttribute) {

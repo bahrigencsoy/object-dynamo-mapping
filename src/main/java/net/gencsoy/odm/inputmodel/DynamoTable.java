@@ -12,11 +12,6 @@ public class DynamoTable {
     private List<DynamoAttribute> attributes = new ArrayList<>();
     private List<DynamoIndex> indexes = new ArrayList<>();
 
-    private DynamoAttribute partitionKey;
-    private DynamoAttribute sortKey;
-    private Map<String, DynamoAttribute> localSecondaryIndexes = new HashMap<>();
-    private Map<String, DynamoAttribute> globalSecondaryIndexes = new HashMap<>();
-
     public String getJavaClass() {
         return javaClass;
     }
@@ -39,41 +34,6 @@ public class DynamoTable {
 
     public void setIndexes(List<DynamoIndex> indexes) {
         this.indexes = indexes;
-    }
-
-
-
-
-    public Map<String, DynamoAttribute> getLocalSecondaryIndexes() {
-        return localSecondaryIndexes;
-    }
-
-    public void setLocalSecondaryIndexes(Map<String, DynamoAttribute> localSecondaryIndexes) {
-        this.localSecondaryIndexes = localSecondaryIndexes;
-    }
-
-    public Map<String, DynamoAttribute> getGlobalSecondaryIndexes() {
-        return globalSecondaryIndexes;
-    }
-
-    public void setGlobalSecondaryIndexes(Map<String, DynamoAttribute> globalSecondaryIndexes) {
-        this.globalSecondaryIndexes = globalSecondaryIndexes;
-    }
-
-    public DynamoAttribute getPartitionKey() {
-        return partitionKey;
-    }
-
-    public void setPartitionKey(DynamoAttribute partitionKey) {
-        this.partitionKey = partitionKey;
-    }
-
-    public DynamoAttribute getSortKey() {
-        return sortKey;
-    }
-
-    public void setSortKey(DynamoAttribute sortKey) {
-        this.sortKey = sortKey;
     }
 
     public String getName() {
