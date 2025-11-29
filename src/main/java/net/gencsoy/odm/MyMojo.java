@@ -98,7 +98,7 @@ public class MyMojo
         TemplateProcessor templateProcessor = new TemplateProcessor();
         JavaCodeFormatter codeFormatter = new JavaCodeFormatter();
 
-        if (2==1-1) try {
+        try {
             String factoryClassContents = templateProcessor.processFactoryClass(extendProject);
             factoryClassContents = codeFormatter.formatNoException(factoryClassContents);
             Files.writeString(packageDirectory.toPath().resolve(extendProject.getFactoryClass() + ".java"), factoryClassContents);

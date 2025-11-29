@@ -17,9 +17,9 @@ public class [(${project.factoryClass})] {
     public [(${project.factoryClass})](DynamoDbClient client) {
         this.client = client;
     }
-[# th:each="item : ${project.allItems}"]
-    private static [(${item.name})] __construct[(${item.name})](Map<String, AttributeValue> map) {
-        [(${item.name})].Builder builder = [(${item.name})].builder();
+[# th:each="table : ${project.tables}"]
+    private static [(${table.javaClass})] __construct[(${table.javaClass})](Map<String, AttributeValue> map) {
+        [(${table.javaClass})].Builder builder = [(${table.javaClass})].builder();
         [# th:insert="~{construct-object}"][/]
         var obj = builder.build();
         return obj;
@@ -28,12 +28,12 @@ public class [(${project.factoryClass})] {
     /**
       * Atomically puts an item or overwrite it.
       */
-    public [(${item.name})] put[(${item.name})]( [# th:insert="~{all-attributes-types}"][/], boolean atomic )
+    public [(${table.javaClass})] put[(${table.javaClass})]( [# th:insert="~{all-attributes-types}"][/], boolean atomic )
     {
-        if ([(${item.table.partitionKey.attribute})] == null) {
-            throw new NullPointerException("Partition key \"[(${item.table.partitionKey.name})]\" is null");
+        if ([(${table.partitionKey.attribute})] == null) {
+            throw new NullPointerException("Partition key \"[(${table.partitionKey.name})]\" is null");
         }
-        [# th:if="${item.table.hasSortKey}"]
+        [# th:if="${table.hasSortKey}"]
         if ([(${item.table.sortKey.attribute})] == null) {
             throw new NullPointerException("Sort key \"[(${item.table.sortKey.name})]\" is null");
         }
@@ -41,16 +41,16 @@ public class [(${project.factoryClass})] {
 
         Map<String, AttributeValue> map = new HashMap<>();
         [# th:insert="~{key}"][/]
-[# th:each="attribute : ${item.derivedAttributes}"]
+[# th:each="attribute : ${table.attributes}"]
         if ([(${attribute.attribute})] != null) {
-            [(${item.name})].[(${attribute.helper})].contributeToMap(map, [(${attribute.attribute})]);
+            [(${table.javaClass})].[(${attribute.helper})].contributeToMap(map, [(${attribute.attribute})]);
         }
 [/]
         var builder = PutItemRequest.builder()
-                            .tableName("[(${item.table.name})]")
+                            .tableName("[(${table.name})]")
                             .item(map);
         if (atomic) {
-            builder.conditionExpression("[(${item.table.putConditionExpression})]");
+            builder.conditionExpression("[(${table.putConditionExpression})]");
             builder.returnValuesOnConditionCheckFailure(ReturnValuesOnConditionCheckFailure.ALL_OLD);
         } else {
             builder.returnValues(ReturnValue.ALL_OLD);
@@ -61,12 +61,12 @@ public class [(${project.factoryClass})] {
             if (response.hasAttributes() && !atomic) {
                 map.putAll(response.attributes());
             }
-            var obj = __construct[(${item.name})](map);
+            var obj = __construct[(${table.javaClass})](map);
             obj._setClient(client);
             return obj;
         } catch (ConditionalCheckFailedException e) {
           if (e.hasItem() && atomic){
-              var previousObject = __construct[(${item.name})](e.item());
+              var previousObject = __construct[(${table.javaClass})](e.item());
               previousObject._setClient(client);
               return previousObject;
           } else {
@@ -77,13 +77,13 @@ public class [(${project.factoryClass})] {
 
     }
 
-     public Optional<[(${item.name})]> query[(${item.name})]( [# th:insert="~{key-attributes-types}"][/] )
+     public Optional<[(${table.javaClass})]> query[(${table.javaClass})]( [# th:insert="~{key-attributes-types}"][/] )
      {
         Map<String, AttributeValue> map = new HashMap<String, AttributeValue>();
         [# th:insert="~{key}"][/]
 
         GetItemRequest getItemRequest = GetItemRequest.builder()
-                                            .tableName("[(${item.table.name})]")
+                                            .tableName("[(${table.name})]")
                                             .key(map)
                                         .build();
 
@@ -93,17 +93,17 @@ public class [(${project.factoryClass})] {
             return Optional.empty();
         }
         map = result.item();
-        var obj = __construct[(${item.name})](map);
+        var obj = __construct[(${table.javaClass})](map);
         obj._setClient(client);
         return Optional.of(obj);
      }
 
-     public abstract class [(${item.name})]Query {
+     public abstract class [(${table.javaClass})]Query {
         private final QueryRequest.Builder builder;
         protected final Map<String, Condition> keyConditions;
         protected final Map<String, Condition> queryFilter;
 
-        private [(${item.name})]Query() {
+        private [(${table.javaClass})]Query() {
             this.builder = QueryRequest.builder();
             this.keyConditions = new LinkedHashMap<>();
             this.queryFilter = new LinkedHashMap<>();
@@ -119,105 +119,55 @@ public class [(${project.factoryClass})] {
 
         protected abstract Map<String, Condition> selectMapForAttribute(String attribute);
 
-[# th:each="attribute : ${item.allAttributes}"]
-        public lib.GenericQuery<[(${attribute.javaType})],[(${item.name})]Query> [(${attribute.attribute})]() {
-            return new lib.GenericQuery<>("[(${attribute.name})]", this, [(${item.name})].[(${attribute.helper})], selectMapForAttribute("[(${attribute.name})]"));
+[# th:each="attribute : ${table.attributes}"]
+        public lib.GenericQuery<[(${attribute.javaType})],[(${table.javaClass})]Query> [(${attribute.attribute})]() {
+            return new lib.GenericQuery<>("[(${attribute.name})]", this, [(${table.javaClass})].[(${attribute.helper})], selectMapForAttribute("[(${attribute.name})]"));
         }
 [/]
-        public java.util.stream.Stream<[(${item.name})]> execute() {
+        public java.util.stream.Stream<[(${table.javaClass})]> execute() {
             if (!keyConditions.isEmpty()) {
                 builder.keyConditions(keyConditions);
             }
             if (!queryFilter.isEmpty()) {
                 builder.queryFilter(queryFilter);
             }
-            var iterator = execute[(${item.name})]Query(builder.build());
+            var iterator = execute[(${table.javaClass})]Query(builder.build());
             var split = Spliterators.spliteratorUnknownSize(iterator, Spliterator.ORDERED | Spliterator.IMMUTABLE | Spliterator.NONNULL);
             return StreamSupport.stream(split, false);
         }
      }
 
-     public [(${item.name})]Query query[(${item.name})]By[(${#strings.capitalizeWords(item.table.partitionKey.attribute)})]([(${item.table.partitionKey.javaType})] [(${item.table.partitionKey.attribute})]) {
-        [(${item.name})]Query query = new [(${item.name})]Query(){
+     public [(${table.javaClass})]Query query[(${table.javaClass})]By[(${#strings.capitalizeWords(table.partitionKey.attribute)})]([(${table.partitionKey.javaType})] [(${table.partitionKey.attribute})]) {
+        [(${table.javaClass})]Query query = new [(${table.javaClass})]Query(){
 
             @Override
             protected Map<String, Condition> selectMapForAttribute(String attribute) {
                 return switch (attribute) {
                     case "fix_me" -> keyConditions;
-                [# th:each="attribute : ${item.table.keyAttributes}"]
+                [# th:each="attribute : ${table.attributes}"]
                     // case "[(${attribute.name})]" -> keyConditions;
                 [/]
-                [# th:each="attribute : ${item.derivedAttributes}"]
+                [# th:each="attribute : ${table.attributes}"]
                     // case "[(${attribute.name})]" -> queryFilter;
                 [/]
                     default -> throw new IllegalArgumentException("Unknown attribute '" + attribute + "'");
                 };
             }
         };
-        query._setTableName("[(${item.table.name})]");
-        query.[(${item.table.partitionKey.attribute})]().eq([(${item.table.partitionKey.attribute})]);
+        query._setTableName("[(${table.name})]");
+        query.[(${table.partitionKey.attribute})]().eq([(${table.partitionKey.attribute})]);
         return query;
      }
 
-[# th:each="entry : ${item.table.globalSecondaryIndexes}"]
-public [(${item.name})]Query query[(${item.name})]By[(${#strings.capitalizeWords(entry.value.attribute)})]([(${entry.value.javaType})] [(${entry.value.attribute})]) {
-        [(${item.name})]Query query = new [(${item.name})]Query(){
 
-            @Override
-            protected Map<String, Condition> selectMapForAttribute(String attribute) {
-                return switch (attribute) {
-                    case "fix_me" -> keyConditions;
-                    // case "[(${entry.value.name})]" -> keyConditions;
-                [# th:each="attribute : ${item.allAttributes}"]
-                [# th:if="${attribute.name} != ${entry.value.name}"]
-                    // case "[(${attribute.name})]" -> queryFilter;
-                [/]
-                [/]
-                    default -> throw new IllegalArgumentException("Unknown attribute '" + attribute + "'");
-                };
-            }
-        };
-        query._setTableName("[(${item.table.name})]");
-        query._setIndexName("[(${entry.key})]");
-        query.[(${entry.value.attribute})]().eq([(${entry.value.attribute})]);
-        return query;
-     }
-[/]
 
-[# th:each="entry : ${item.table.localSecondaryIndexes}"]
-public [(${item.name})]Query query[(${item.name})]By[(${#strings.capitalizeWords(entry.value.attribute)})]([(${item.table.partitionKey.javaType})] [(${item.table.partitionKey.attribute})], [(${entry.value.javaType})] [(${entry.value.attribute})]) {
-        [(${item.name})]Query query = new [(${item.name})]Query(){
-
-            @Override
-            protected Map<String, Condition> selectMapForAttribute(String attribute) {
-                return switch (attribute) {
-                    case "fix_me" -> keyConditions;
-                    //case "[(${item.table.partitionKey.name})]" -> keyConditions;
-                    //case "[(${entry.value.name})]" -> keyConditions;
-                [# th:each="attribute : ${item.allAttributes}"]
-                [# th:if="${attribute.name} != ${entry.value.name}"]
-                    //case "[(${attribute.name})]" -> queryFilter;
-                [/]
-                [/]
-                    default -> throw new IllegalArgumentException("Unknown attribute '" + attribute + "'");
-                };
-            }
-        };
-        query._setTableName("[(${item.table.name})]");
-        query._setIndexName("[(${entry.key})]");
-        query.[(${entry.value.attribute})]().eq([(${entry.value.attribute})]);
-        query.[(${item.table.partitionKey.attribute})]().eq([(${item.table.partitionKey.attribute})]);
-        return query;
-     }
-[/]
-
-     public java.util.stream.Stream<[(${item.name})]> scanAll[(${item.name})]() {
-        var iterator = execute[(${item.name})]Scan(ScanRequest.builder().tableName("[(${item.table.name})]").build());
+     public java.util.stream.Stream<[(${table.javaClass})]> scanAll[(${table.javaClass})]() {
+        var iterator = execute[(${table.javaClass})]Scan(ScanRequest.builder().tableName("[(${table.name})]").build());
         var split = Spliterators.spliteratorUnknownSize(iterator, Spliterator.ORDERED | Spliterator.IMMUTABLE | Spliterator.NONNULL);
         return StreamSupport.stream(split, false);
      }
 
-     private Iterator<[(${item.name})]> execute[(${item.name})]Query(QueryRequest queryRequest){
+     private Iterator<[(${table.javaClass})]> execute[(${table.javaClass})]Query(QueryRequest queryRequest){
         AtomicReference<QueryResponse> currentResponse = new AtomicReference<>(client.query(queryRequest));
         AtomicReference<Iterator<Map<String, AttributeValue>>> currentIterator = new AtomicReference<>(currentResponse.get().items().iterator());
         return new Iterator<>() {
@@ -239,16 +189,16 @@ public [(${item.name})]Query query[(${item.name})]By[(${#strings.capitalizeWords
             }
 
             @Override
-            public [(${item.name})] next() {
+            public [(${table.javaClass})] next() {
                 Map<String, AttributeValue> map = currentIterator.get().next();
-                var obj = __construct[(${item.name})](map);
+                var obj = __construct[(${table.javaClass})](map);
                 obj._setClient(client);
                 return obj;
             }
         };
      }
 
-     private Iterator<[(${item.name})]> execute[(${item.name})]Scan(ScanRequest scanRequest) {
+     private Iterator<[(${table.javaClass})]> execute[(${table.javaClass})]Scan(ScanRequest scanRequest) {
         AtomicReference<ScanResponse> currentResponse = new AtomicReference<>(client.scan(scanRequest));
         AtomicReference<Iterator<Map<String, AttributeValue>>> currentIterator = new AtomicReference<>(
                 currentResponse.get().items().iterator());
@@ -271,9 +221,9 @@ public [(${item.name})]Query query[(${item.name})]By[(${#strings.capitalizeWords
             }
 
             @Override
-            public [(${item.name})] next() {
+            public [(${table.javaClass})] next() {
                 Map<String, AttributeValue> map = currentIterator.get().next();
-                var obj = __construct[(${item.name})](map);
+                var obj = __construct[(${table.javaClass})](map);
                 obj._setClient(client);
                 return obj;
             }
