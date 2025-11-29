@@ -46,6 +46,36 @@ public class Usage {
   "tables": [
     {
       "name": "game_scores_odm_test",
+      "javaClass": "GameScore",
+      "primaryKey": {
+        "partitionKey": "user_id",
+        "sortKey": "gameTitle"
+      },
+      "attributes": [
+        {
+          "name": "user_id",
+          "type": "STRING",
+          "attribute": "userId"
+        },
+        {
+          "name": "game_title",
+          "type": "STRING",
+          "attribute": "gameTitle"
+        },
+        {
+          "name": "total_score",
+          "type": "NUMBER",
+          "attribute": "totalScore",
+          "javaType": "Integer"
+        }
+      ],
+      "indexes": [
+        {
+          "name": "game_genres_idx",
+          "sortKey": "game_genre",
+          "_comment": "^^ no partition key means that this is a local secondary index"
+        }
+      ],
       "partitionKey": {
         "name": "user_id",
         "type": "STRING",
@@ -55,6 +85,13 @@ public class Usage {
         "name": "game_title",
         "type": "STRING",
         "attribute": "gameTitle"
+      },
+      "localSecondaryIndexes": {
+        "game_genres_idx": {
+          "name": "game_genre",
+          "type": "STRING",
+          "attribute": "gameGenre"
+        }
       },
       "items": [
         {
@@ -77,8 +114,8 @@ public class Usage {
         "type": "STRING",
         "attribute": "key"
       },
-      "localSecondaryIndexes": {
-        "cache_id_ix": {
+      "globalSecondaryIndexes": {
+        "cache_id_idx": {
           "name": "cached_item_unique_id",
           "type": "STRING",
           "attribute": "uniqueId"
