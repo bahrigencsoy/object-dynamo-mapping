@@ -31,7 +31,7 @@
       ],
       "primaryKey": {
         "partitionKey": "user_id",
-        "sortKey": "gameTitle"
+        "sortKey": "game_title"
       },
       "indexes": [
         {

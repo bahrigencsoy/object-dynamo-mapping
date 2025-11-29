@@ -18,7 +18,7 @@ public class Usage {
     }
 
     void queryAndUpdateEntity() {
-        GameScore score = em.queryGameScore("user_10", "Another World").get();
+        GameScore score = em.findGameScore("user_10", "Another World").get();
 
         score.mutator()
                 .totalScore().setValue(123)

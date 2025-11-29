@@ -34,8 +34,8 @@ public class [(${project.factoryClass})] {
             throw new NullPointerException("Partition key \"[(${table.partitionKey.name})]\" is null");
         }
         [# th:if="${table.hasSortKey}"]
-        if ([(${item.table.sortKey.attribute})] == null) {
-            throw new NullPointerException("Sort key \"[(${item.table.sortKey.name})]\" is null");
+        if ([(${table.sortKey.attribute})] == null) {
+            throw new NullPointerException("Sort key \"[(${table.sortKey.name})]\" is null");
         }
         [/]
 
@@ -77,7 +77,7 @@ public class [(${project.factoryClass})] {
 
     }
 
-     public Optional<[(${table.javaClass})]> query[(${table.javaClass})]( [# th:insert="~{key-attributes-types}"][/] )
+     public Optional<[(${table.javaClass})]> find[(${table.javaClass})]( [# th:insert="~{key-attributes-types}"][/] )
      {
         Map<String, AttributeValue> map = new HashMap<String, AttributeValue>();
         [# th:insert="~{key}"][/]

@@ -48,7 +48,7 @@ public class IntegrationTest {
     }
 
     void step_103_query_1_item() {
-        assertFalse(em.queryGameScore(score.userId(), score.gameTitle()).isPresent());
+        assertFalse(em.findGameScore(score.userId(), score.gameTitle()).isPresent());
         assertFalse(em.queryGameScoreByUserId("dava").totalScore().eq(10).execute().findFirst().isPresent());
     }
 
@@ -56,7 +56,7 @@ public class IntegrationTest {
         var newScore = em.putGameScore(score.userId(), score.gameTitle(), score.gameGenre(), -1, false);
         assertNotEquals(score, newScore);
         score = newScore;
-        newScore = em.queryGameScore(score.userId(), score.gameTitle()).get();
+        newScore = em.findGameScore(score.userId(), score.gameTitle()).get();
         assertEquals(score, newScore);
         newScore = em.queryGameScoreByUserId(score.userId()).execute().findFirst().get();
         assertEquals(score, newScore);
@@ -73,9 +73,9 @@ public class IntegrationTest {
 
     void step_106_update_item() {
         score = em.putGameScore("user", "my game", null, 100, false);
-        score = em.queryGameScore("user", "my game").get();
+        score = em.findGameScore("user", "my game").get();
         score.mutator().totalScore().setValue(200).commit();
-        score = em.queryGameScore("user", "my game").get();
+        score = em.findGameScore("user", "my game").get();
         assertEquals(200, score.totalScore());
     }
 
@@ -90,7 +90,7 @@ public class IntegrationTest {
 
     void step_111_cache_item_tests() {
         var cache = em.putCacheResource("a", null, new byte[]{1, 2, 3}, false);
-        cache = em.queryCacheResource("a").get();
+        cache = em.findCacheResource("a").get();
         assertArrayEquals(new byte[]{1, 2, 3}, cache.data());
         cache.mutator().delete();
     }
