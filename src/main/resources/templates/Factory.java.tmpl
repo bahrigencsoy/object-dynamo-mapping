@@ -276,6 +276,21 @@ public [(${item.name})]Query query[(${item.name})]By[(${#strings.capitalizeWords
             }
         };
     }
+
+[# th:each="desc : ${item.table.indexDescriptors}"]
+    public [(${desc.item.name})]Query xxxxx_query[(${desc.item.name})]By([# th:each="attribute, iterStat : ${desc.equalityAttributes}"][(${attribute.javaType})] [(${attribute.attribute})][/]) {
+        [(${item.name})]Query query = new [(${item.name})]Query(){
+
+            @Override
+            protected Map<String, Condition> selectMapForAttribute(String attribute) {
+                return null;
+            }
+        };
+        query._setTableName("[(${item.table.name})]");
+        return query;
+    }
+[/]
+
 [/]
 
 

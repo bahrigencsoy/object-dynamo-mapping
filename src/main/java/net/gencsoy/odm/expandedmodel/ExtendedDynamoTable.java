@@ -1,6 +1,7 @@
 package net.gencsoy.odm.expandedmodel;
 
 import net.gencsoy.odm.inputmodel.DynamoAttribute;
+import net.gencsoy.odm.inputmodel.DynamoItem;
 import net.gencsoy.odm.inputmodel.DynamoTable;
 
 import java.util.ArrayList;
@@ -35,5 +36,20 @@ public class ExtendedDynamoTable extends DynamoTable {
             sb.append(" AND attribute_not_exists(" + getSortKey().getName() + ")");
         }
         return sb.toString();
+    }
+
+    public List<IndexDescriptor> getIndexDescriptors() {
+        List<IndexDescriptor> list = new ArrayList<>();
+        for (DynamoItem item : getItems()) {
+            IndexDescriptor primaryDescriptor = new IndexDescriptor();
+            primaryDescriptor.getKeyAttributes().add(getPartitionKey());
+            if (hasSortKey()) {
+                primaryDescriptor.getKeyAttributes().add(getSortKey());
+            }
+            primaryDescriptor.getEqualityAttributes().add(getPartitionKey());
+            primaryDescriptor.setItem(item);
+            list.add(primaryDescriptor);
+        }
+        return list;
     }
 }
