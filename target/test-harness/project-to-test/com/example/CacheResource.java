@@ -4,6 +4,7 @@ import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
 import software.amazon.awssdk.services.dynamodb.model.*;
 
 import java.util.*;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import static com.example.lib.*;
 
@@ -71,12 +72,29 @@ public class CacheResource implements Comparable<CacheResource> {
         }
 
         public CacheResource commit() {
-            HashMap<String, AttributeValueUpdate> updatedValues = new HashMap<>();
+            AtomicInteger counter = new AtomicInteger();
+            List<String> setExpressions = new ArrayList<>();
+            List<String> removeExpressions = new ArrayList<>();
+            Map<String, String> expressionAttributeNames = new HashMap<>();
+            Map<String, AttributeValue> expressionAttributeValues = new HashMap<>();
             for (var mutator : mutators) {
-                mutator.accept(updatedValues);
+                mutator.appendUpdateExpression(counter, setExpressions, removeExpressions, expressionAttributeNames,
+                        expressionAttributeValues);
+            }
+            StringBuilder updateExpression = new StringBuilder();
+            if (!setExpressions.isEmpty()) {
+                updateExpression.append("SET ");
+                updateExpression.append(String.join(",", setExpressions));
+                updateExpression.append(" ");
+            }
+            if (!removeExpressions.isEmpty()) {
+                updateExpression.append("REMOVE ");
+                updateExpression.append(String.join(",", removeExpressions));
+                updateExpression.append(" ");
             }
             var updateItemRequest = UpdateItemRequest.builder().key(key).tableName("cached_resource_odm_test")
-                    .attributeUpdates(updatedValues).returnValues(ReturnValue.ALL_NEW).build();
+                    .updateExpression(updateExpression.toString()).expressionAttributeNames(expressionAttributeNames)
+                    .expressionAttributeValues(expressionAttributeValues).returnValues(ReturnValue.ALL_NEW).build();
             UpdateItemResponse response = client.updateItem(updateItemRequest);
             Map<String, AttributeValue> map = response.attributes();
             CacheResource.Builder builder = CacheResource.builder();

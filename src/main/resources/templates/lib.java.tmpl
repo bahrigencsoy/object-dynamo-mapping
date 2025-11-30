@@ -4,6 +4,7 @@ import software.amazon.awssdk.core.SdkBytes;
 import software.amazon.awssdk.services.dynamodb.model.*;
 
 import java.util.*;
+import java.util.concurrent.atomic.AtomicInteger;
 
 class lib {
 
@@ -129,14 +130,18 @@ class lib {
         }
 
         @Override
-        void accept(Map<String, AttributeValueUpdate> updatedValues) {
+        void appendUpdateExpression(AtomicInteger counter, List<String> setExpressions, List<String> removeExpressions,  Map<String, String> expressionAttributeNames, Map<String, AttributeValue> expressionAttributeValues) {
             if (delete) {
-                updatedValues.put(attribute, AttributeValueUpdate.builder().action(AttributeAction.DELETE).build());
+                int deleteCounter = counter.getAndIncrement();
+                removeExpressions.add("#delete" + deleteCounter);
+                expressionAttributeNames.put("#delete"+deleteCounter, attribute);
             } else {
+                int updateCounter = counter.getAndIncrement();
+                setExpressions.add(String.format("#sk%s = :sv%s", updateCounter, updateCounter));
+                expressionAttributeNames.put("#sk"+updateCounter, attribute);
                 AttributeValue.Builder builder = AttributeValue.builder();
                 builder = helper.build(builder, value);
-                updatedValues.put(attribute,
-                        AttributeValueUpdate.builder().value(builder.build()).action(AttributeAction.PUT).build());
+                expressionAttributeValues.put(":sv"+updateCounter, builder.build());
             }
         }
     }
@@ -186,6 +191,6 @@ class lib {
     }
 
     abstract static class FieldMutator {
-        abstract void accept(Map<String, AttributeValueUpdate> updatedValues);
+        abstract void appendUpdateExpression(AtomicInteger counter, List<String> setExpressions, List<String> removeExpressions,  Map<String, String> expressionAttributeNames, Map<String, AttributeValue> expressionAttributeValues);
     }
 }
