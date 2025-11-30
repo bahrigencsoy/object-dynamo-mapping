@@ -300,6 +300,9 @@ public class GameScoreEntityManager {
         if (map.containsKey("cached_item_unique_id")) {
             builder.uniqueId(CacheResource._cached_item_unique_id__helper.extractFromMap(map));
         }
+        if (map.containsKey("cache_data_props")) {
+            builder.properties(CacheResource._cache_data_props__helper.extractFromMap(map));
+        }
 
         var obj = builder.build();
         return obj;
@@ -308,7 +311,8 @@ public class GameScoreEntityManager {
     /**
       * Atomically puts an item or overwrite it.
       */
-    public CacheResource putCacheResource(String key, byte[] data, String uniqueId, boolean atomic) {
+    public CacheResource putCacheResource(String key, byte[] data, String uniqueId, Map<String, String> properties,
+            boolean atomic) {
         if (key == null) {
             throw new NullPointerException("Partition key \"cache_item_key\" is null");
         }
@@ -324,6 +328,9 @@ public class GameScoreEntityManager {
         }
         if (uniqueId != null) {
             CacheResource._cached_item_unique_id__helper.contributeToMap(map, uniqueId);
+        }
+        if (properties != null) {
+            CacheResource._cache_data_props__helper.contributeToMap(map, properties);
         }
 
         var builder = PutItemRequest.builder().tableName("cached_resource_odm_test").item(map);
@@ -404,6 +411,10 @@ public class GameScoreEntityManager {
             return new lib.GenericQuery<>("cached_item_unique_id", this, CacheResource._cached_item_unique_id__helper,
                     selectMapForAttribute("cached_item_unique_id"));
         }
+        public lib.GenericQuery<Map<String, String>, CacheResourceQuery> properties() {
+            return new lib.GenericQuery<>("cache_data_props", this, CacheResource._cache_data_props__helper,
+                    selectMapForAttribute("cache_data_props"));
+        }
 
         public java.util.stream.Stream<CacheResource> execute() {
             if (!keyConditions.isEmpty()) {
@@ -430,6 +441,7 @@ public class GameScoreEntityManager {
 
                     case "cached_data" -> queryFilter;
                     case "cached_item_unique_id" -> queryFilter;
+                    case "cache_data_props" -> queryFilter;
 
                     default -> throw new IllegalArgumentException("Unknown attribute '" + attribute + "'");
                 };
@@ -452,6 +464,7 @@ public class GameScoreEntityManager {
 
                     case "cache_item_key" -> queryFilter;
                     case "cached_data" -> queryFilter;
+                    case "cache_data_props" -> queryFilter;
 
                     default -> throw new IllegalArgumentException("Unknown attribute '" + attribute + "'");
                 };

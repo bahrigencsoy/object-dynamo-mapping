@@ -100,6 +100,11 @@ public class Usage {
           "name": "cached_item_unique_id",
           "type": "STRING",
           "attribute": "uniqueId"
+        },
+        {
+          "name": "cache_data_props",
+          "type": "X_STRINGMAP",
+          "attribute": "properties"
         }
       ],
       "primaryIndex": {

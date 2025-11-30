@@ -13,6 +13,7 @@ public class CacheResource implements Comparable<CacheResource> {
     private final String key;
     private final byte[] data;
     private final String uniqueId;
+    private final Map<String, String> properties;
 
     private transient DynamoDbClient _client;
 
@@ -20,6 +21,7 @@ public class CacheResource implements Comparable<CacheResource> {
         this.key = b.key;
         this.data = b.data;
         this.uniqueId = b.uniqueId;
+        this.properties = b.properties;
     }
 
     public String key() {
@@ -32,6 +34,10 @@ public class CacheResource implements Comparable<CacheResource> {
 
     public String uniqueId() {
         return uniqueId;
+    }
+
+    public Map<String, String> properties() {
+        return properties;
     }
 
     void _setClient(DynamoDbClient client) {
@@ -67,6 +73,11 @@ public class CacheResource implements Comparable<CacheResource> {
         }
         public GenericMutator<String, Mutator> uniqueId() {
             var mutator = new GenericMutator<>("cached_item_unique_id", this, _cached_item_unique_id__helper);
+            mutators.add(mutator);
+            return mutator;
+        }
+        public GenericMutator<Map<String, String>, Mutator> properties() {
+            var mutator = new GenericMutator<>("cache_data_props", this, _cache_data_props__helper);
             mutators.add(mutator);
             return mutator;
         }
@@ -108,6 +119,9 @@ public class CacheResource implements Comparable<CacheResource> {
             if (map.containsKey("cached_item_unique_id")) {
                 builder.uniqueId(CacheResource._cached_item_unique_id__helper.extractFromMap(map));
             }
+            if (map.containsKey("cache_data_props")) {
+                builder.properties(CacheResource._cache_data_props__helper.extractFromMap(map));
+            }
 
             var obj = builder.build();
             obj._setClient(client);
@@ -129,12 +143,12 @@ public class CacheResource implements Comparable<CacheResource> {
             return true;
         CacheResource other = (CacheResource) o;
         return Objects.equals(key, other.key) && Objects.equals(data, other.data)
-                && Objects.equals(uniqueId, other.uniqueId);
+                && Objects.equals(uniqueId, other.uniqueId) && Objects.equals(properties, other.properties);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(key, data, uniqueId);
+        return Objects.hash(key, data, uniqueId, properties);
     }
 
     @Override
@@ -167,6 +181,8 @@ public class CacheResource implements Comparable<CacheResource> {
     static final lib.AttributeHelper<byte[]> _cached_data__helper = new lib.Base64ArrayAttributeHelper("cached_data");
     static final lib.AttributeHelper<String> _cached_item_unique_id__helper = new lib.StringAttributeHelper(
             "cached_item_unique_id");
+    static final lib.AttributeHelper<Map<String, String>> _cache_data_props__helper = new lib.StringMapHelper(
+            "cache_data_props");
 
     public static Builder builder() {
         return new Builder();
@@ -177,6 +193,7 @@ public class CacheResource implements Comparable<CacheResource> {
         private String key;
         private byte[] data;
         private String uniqueId;
+        private Map<String, String> properties;
 
         private Builder() {
         }
@@ -191,6 +208,10 @@ public class CacheResource implements Comparable<CacheResource> {
         }
         public Builder uniqueId(String uniqueId) {
             this.uniqueId = uniqueId;
+            return this;
+        }
+        public Builder properties(Map<String, String> properties) {
+            this.properties = properties;
             return this;
         }
 

@@ -5,6 +5,7 @@ import software.amazon.awssdk.services.dynamodb.model.*;
 
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Collectors;
 
 class lib {
 
@@ -102,6 +103,32 @@ class lib {
         @Override
         public byte[] extract(AttributeValue value) {
             return value.b().asByteArrayUnsafe();
+        }
+    }
+
+    static class StringMapHelper extends BaseAttributeHelper<Map<String, String>> {
+
+        StringMapHelper(String attributeName) {
+            super(attributeName);
+        }
+
+        @Override
+        public AttributeValue.Builder build(AttributeValue.Builder builder, Map<String, String> value) {
+            Map<String, AttributeValue> dynamoMap = new TreeMap<>();
+            for (Map.Entry<String, String> e : value.entrySet()) {
+                dynamoMap.put(e.getKey(), AttributeValue.builder().s(e.getValue()).build());
+            }
+            return builder.m(dynamoMap);
+        }
+
+        @Override
+        public Map<String, String> extract(AttributeValue value) {
+            if (value.hasM()) {
+                return value.m().entrySet().stream()
+                        .collect(Collectors.toUnmodifiableMap(Map.Entry::getKey, entry -> entry.getValue().s()));
+            } else {
+                return Map.of();
+            }
         }
     }
 
