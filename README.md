@@ -70,7 +70,7 @@ public class Usage {
           "javaType": "Integer"
         }
       ],
-      "primaryKey": {
+      "primaryIndex": {
         "partitionKey": "user_id",
         "sortKey": "game_title"
       },
@@ -102,7 +102,7 @@ public class Usage {
           "attribute": "uniqueId"
         }
       ],
-      "primaryKey": {
+      "primaryIndex": {
         "partitionKey": "cache_item_key"
       },
       "indexes": [

@@ -29,7 +29,7 @@
           "javaType": "Integer"
         }
       ],
-      "primaryKey": {
+      "primaryIndex": {
         "partitionKey": "user_id",
         "sortKey": "game_title"
       },
@@ -61,7 +61,7 @@
           "attribute": "uniqueId"
         }
       ],
-      "primaryKey": {
+      "primaryIndex": {
         "partitionKey": "cache_item_key"
       },
       "indexes": [

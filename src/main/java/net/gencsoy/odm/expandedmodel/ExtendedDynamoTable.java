@@ -7,7 +7,6 @@ import net.gencsoy.odm.inputmodel.DynamoTable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
-import java.util.Optional;
 
 public class ExtendedDynamoTable extends DynamoTable {
 
@@ -36,8 +35,8 @@ public class ExtendedDynamoTable extends DynamoTable {
 
     public List<DynamoAttribute> getSortAttributes() {
         List<DynamoAttribute> list = new ArrayList<>();
-        insertToList(getPrimaryKey().getPartitionKey(), list);
-        insertToList(getPrimaryKey().getSortKey(), list);
+        insertToList(getPrimaryIndex().getPartitionKey(), list);
+        insertToList(getPrimaryIndex().getSortKey(), list);
         for (DynamoIndex index : getIndexes()) {
             insertToList(index.getPartitionKey(), list);
             insertToList(index.getSortKey(), list);
@@ -47,9 +46,9 @@ public class ExtendedDynamoTable extends DynamoTable {
 
     public String getPutConditionExpression() {
         StringBuilder sb = new StringBuilder();
-        sb.append("attribute_not_exists(" + getPrimaryKey().getPartitionKey() + ")");
-        if (getPrimaryKey().getSortKey() != null) {
-            sb.append(" AND attribute_not_exists(" + getPrimaryKey().getSortKey() + ")");
+        sb.append("attribute_not_exists(" + getPrimaryIndex().getPartitionKey() + ")");
+        if (getPrimaryIndex().getSortKey() != null) {
+            sb.append(" AND attribute_not_exists(" + getPrimaryIndex().getSortKey() + ")");
         }
         return sb.toString();
     }
@@ -119,14 +118,14 @@ public class ExtendedDynamoTable extends DynamoTable {
     }
 
     public DynamoAttribute getPartitionKey() {
-        return findAttributeByName(getPrimaryKey().getPartitionKey());
+        return findAttributeByName(getPrimaryIndex().getPartitionKey());
     }
 
     public DynamoAttribute getSortKey() {
-        if (getPrimaryKey().getSortKey() == null) {
+        if (getPrimaryIndex().getSortKey() == null) {
             return null;
         } else {
-            return findAttributeByName(getPrimaryKey().getSortKey());
+            return findAttributeByName(getPrimaryIndex().getSortKey());
         }
     }
 }

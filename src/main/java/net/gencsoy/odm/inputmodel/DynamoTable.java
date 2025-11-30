@@ -1,14 +1,12 @@
 package net.gencsoy.odm.inputmodel;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 public class DynamoTable {
     private String name;
     private String javaClass;
-    private DynamoIndex primaryKey;
+    private DynamoIndex primaryIndex;
     private List<DynamoAttribute> attributes = new ArrayList<>();
     private List<DynamoIndex> indexes = new ArrayList<>();
 
@@ -44,11 +42,11 @@ public class DynamoTable {
         this.name = tableName;
     }
 
-    public DynamoIndex getPrimaryKey() {
-        return primaryKey;
+    public DynamoIndex getPrimaryIndex() {
+        return primaryIndex;
     }
 
-    public void setPrimaryKey(DynamoIndex primaryKey) {
-        this.primaryKey = primaryKey;
+    public void setPrimaryIndex(DynamoIndex primaryKey) {
+        this.primaryIndex = primaryKey;
     }
 }
