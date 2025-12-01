@@ -88,6 +88,7 @@ public class IntegrationTest {
         em.putGameScore("aaa", "space traveler", "shooter", 200, false);
         assertEquals(2, em.queryGameScoreByUserId("aaa").execute().count());
         assertThrows(DynamoDbException.class, () -> em.queryGameScoreByUserId("bbb").userId().ne("xxx").execute());
+        em.findGameScore("aaa", "space traveler").get().mutator().totalScore().delete().commit();
     }
 
     void step_106_update_item() {

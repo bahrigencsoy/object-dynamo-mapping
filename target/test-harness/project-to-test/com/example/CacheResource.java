@@ -114,10 +114,13 @@ public class CacheResource implements Comparable<CacheResource> {
                 updateExpression.append(String.join(",", removeExpressions));
                 updateExpression.append(" ");
             }
-            var updateItemRequest = UpdateItemRequest.builder().key(key).tableName("cached_resource_odm_test")
+            var updateItemRequestBuilder = UpdateItemRequest.builder().key(key).tableName("cached_resource_odm_test")
                     .updateExpression(updateExpression.toString()).expressionAttributeNames(expressionAttributeNames)
-                    .expressionAttributeValues(expressionAttributeValues).returnValues(ReturnValue.ALL_NEW).build();
-            UpdateItemResponse response = client.updateItem(updateItemRequest);
+                    .returnValues(ReturnValue.ALL_NEW);
+            if (!expressionAttributeValues.isEmpty()) {
+                updateItemRequestBuilder.expressionAttributeValues(expressionAttributeValues);
+            }
+            UpdateItemResponse response = client.updateItem(updateItemRequestBuilder.build());
             Map<String, AttributeValue> map = response.attributes();
             CacheResource.Builder builder = CacheResource.builder();
 

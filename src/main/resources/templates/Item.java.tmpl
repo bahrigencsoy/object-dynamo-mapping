@@ -75,15 +75,16 @@ public class [(${table.javaClass})] implements Comparable<[(${table.javaClass})]
                 updateExpression.append(String.join(",", removeExpressions));
                 updateExpression.append(" ");
             }
-            var updateItemRequest = UpdateItemRequest.builder()
+            var updateItemRequestBuilder = UpdateItemRequest.builder()
                     .key(key)
                     .tableName("[(${table.name})]")
                     .updateExpression(updateExpression.toString())
                     .expressionAttributeNames(expressionAttributeNames)
-                    .expressionAttributeValues(expressionAttributeValues)
-                    .returnValues(ReturnValue.ALL_NEW)
-                    .build();
-              UpdateItemResponse response = client.updateItem(updateItemRequest);
+                    .returnValues(ReturnValue.ALL_NEW);
+              if (!expressionAttributeValues.isEmpty()){
+                updateItemRequestBuilder.expressionAttributeValues(expressionAttributeValues);
+              }
+              UpdateItemResponse response = client.updateItem(updateItemRequestBuilder.build());
               Map<String, AttributeValue> map = response.attributes();
               [(${table.javaClass})].Builder builder = [(${table.javaClass})].builder();
 [# th:insert="~{construct-object}"][/]
