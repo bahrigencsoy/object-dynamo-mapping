@@ -8,6 +8,7 @@ import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
 import software.amazon.awssdk.services.dynamodb.model.DynamoDbException;
 
+import java.time.Instant;
 import java.util.Map;
 import java.util.Random;
 import java.util.concurrent.Phaser;
@@ -107,7 +108,7 @@ public class IntegrationTest {
     }
 
     void step_111_cache_item_tests() {
-        var cache = em.putCacheResource("a", new byte[]{1, 2, 3}, null, Map.of("a", "x", "b", "y"), false);
+        var cache = em.putCacheResource("a", new byte[]{1, 2, 3}, null, Map.of("a", "x", "b", "y"), Instant.now(), false);
         cache = em.findCacheResource("a").get();
         assertArrayEquals(new byte[]{1, 2, 3}, cache.data());
         assertEquals(Map.of("b", "y", "a", "x"), cache.properties());
@@ -154,12 +155,12 @@ public class IntegrationTest {
 
     void step_300_query_by_global_secondary_index() {
         assertEquals(0, em.scanAllCacheResource().count());
-        em.putCacheResource("key", new byte[]{1, 2, 3}, "uniq1", Map.of(), true);
+        em.putCacheResource("key", new byte[]{1, 2, 3}, "uniq1", Map.of(), Instant.now(), true);
         assertEquals(1, em.queryCacheResourceByUniqueId("uniq1").execute().count());
         CacheResource resource = em.queryCacheResourceByUniqueId("uniq1").execute().findFirst().get();
         assertArrayEquals(new byte[]{1, 2, 3}, resource.data());
-        em.putCacheResource("key2", new byte[]{4, 5, 6}, "uniq1", Map.of(), true);
-        em.putCacheResource("key3", new byte[]{7, 8, 9}, "uniq2", Map.of(), true);
+        em.putCacheResource("key2", new byte[]{4, 5, 6}, "uniq1", Map.of(), Instant.now(), true);
+        em.putCacheResource("key3", new byte[]{7, 8, 9}, "uniq2", Map.of(), null, true);
         assertEquals(2, em.queryCacheResourceByUniqueId("uniq1").execute().count());
         assertThrows(DynamoDbException.class, () -> em.queryCacheResourceByUniqueId("uniq1").uniqueId().ne("uniq1").execute());
         assertArrayEquals(new byte[]{7, 8, 9}, em.queryCacheResourceByKey("key3").uniqueId().ne("x").execute().findFirst().get().data());

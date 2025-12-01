@@ -4,5 +4,6 @@ public enum DynamoColumnType {
     STRING,
     BINARY,
     NUMBER,
-    X_STRINGMAP
+    X_STRINGMAP,
+    X_INSTANT
 }

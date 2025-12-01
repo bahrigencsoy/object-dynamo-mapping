@@ -12,6 +12,7 @@ public class ExtendedDynamoAttribute extends DynamoAttribute {
                 case BINARY -> "byte[]";
                 case NUMBER -> "Long";
                 case X_STRINGMAP -> "Map<String, String>";
+                case X_INSTANT -> "java.time.Instant";
             };
         } else {
             return superType;
@@ -35,6 +36,8 @@ public class ExtendedDynamoAttribute extends DynamoAttribute {
                 }
             case X_STRINGMAP:
                 yield "StringMapHelper";
+            case X_INSTANT:
+                yield "InstantAttributeHelper";
         };
     }
 

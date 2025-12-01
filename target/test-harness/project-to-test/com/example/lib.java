@@ -132,6 +132,22 @@ class lib {
         }
     }
 
+    static class InstantAttributeHelper extends BaseAttributeHelper<java.time.Instant> {
+        public InstantAttributeHelper(String attributeName) {
+            super(attributeName);
+        }
+
+        @Override
+        public AttributeValue.Builder build(AttributeValue.Builder builder, java.time.Instant value) {
+            return builder.n(Long.toString(value.toEpochMilli()));
+        }
+
+        @Override
+        public java.time.Instant extract(AttributeValue value) {
+            return java.time.Instant.ofEpochMilli(Long.parseLong(value.n()));
+        }
+    }
+
     public static class GenericMutator<T, P> extends lib.FieldMutator {
 
         private final String attribute;

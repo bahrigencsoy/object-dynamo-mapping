@@ -105,6 +105,11 @@ public class Usage {
           "name": "cache_data_props",
           "type": "X_STRINGMAP",
           "attribute": "properties"
+        },
+        {
+          "name": "creation_time",
+          "type": "X_INSTANT",
+          "attribute": "creationTime"
         }
       ],
       "primaryIndex": {

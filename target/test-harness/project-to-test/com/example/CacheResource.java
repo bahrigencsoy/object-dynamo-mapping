@@ -14,6 +14,7 @@ public class CacheResource implements Comparable<CacheResource> {
     private final byte[] data;
     private final String uniqueId;
     private final Map<String, String> properties;
+    private final java.time.Instant creationTime;
 
     private transient DynamoDbClient _client;
 
@@ -22,6 +23,7 @@ public class CacheResource implements Comparable<CacheResource> {
         this.data = b.data;
         this.uniqueId = b.uniqueId;
         this.properties = b.properties;
+        this.creationTime = b.creationTime;
     }
 
     public String key() {
@@ -38,6 +40,10 @@ public class CacheResource implements Comparable<CacheResource> {
 
     public Map<String, String> properties() {
         return properties;
+    }
+
+    public java.time.Instant creationTime() {
+        return creationTime;
     }
 
     void _setClient(DynamoDbClient client) {
@@ -78,6 +84,11 @@ public class CacheResource implements Comparable<CacheResource> {
         }
         public GenericMutator<Map<String, String>, Mutator> properties() {
             var mutator = new GenericMutator<>("cache_data_props", this, _cache_data_props__helper);
+            mutators.add(mutator);
+            return mutator;
+        }
+        public GenericMutator<java.time.Instant, Mutator> creationTime() {
+            var mutator = new GenericMutator<>("creation_time", this, _creation_time__helper);
             mutators.add(mutator);
             return mutator;
         }
@@ -122,6 +133,9 @@ public class CacheResource implements Comparable<CacheResource> {
             if (map.containsKey("cache_data_props")) {
                 builder.properties(CacheResource._cache_data_props__helper.extractFromMap(map));
             }
+            if (map.containsKey("creation_time")) {
+                builder.creationTime(CacheResource._creation_time__helper.extractFromMap(map));
+            }
 
             var obj = builder.build();
             obj._setClient(client);
@@ -143,12 +157,13 @@ public class CacheResource implements Comparable<CacheResource> {
             return true;
         CacheResource other = (CacheResource) o;
         return Objects.equals(key, other.key) && Objects.equals(data, other.data)
-                && Objects.equals(uniqueId, other.uniqueId) && Objects.equals(properties, other.properties);
+                && Objects.equals(uniqueId, other.uniqueId) && Objects.equals(properties, other.properties)
+                && Objects.equals(creationTime, other.creationTime);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(key, data, uniqueId, properties);
+        return Objects.hash(key, data, uniqueId, properties, creationTime);
     }
 
     @Override
@@ -185,6 +200,7 @@ public class CacheResource implements Comparable<CacheResource> {
         sb.append(", data='").append(data).append('\'');
         sb.append(", uniqueId='").append(uniqueId).append('\'');
         sb.append(", properties='").append(properties).append('\'');
+        sb.append(", creationTime='").append(creationTime).append('\'');
 
         sb.append('}');
         return sb.toString();
@@ -196,6 +212,8 @@ public class CacheResource implements Comparable<CacheResource> {
             "cached_item_unique_id");
     static final lib.AttributeHelper<Map<String, String>> _cache_data_props__helper = new lib.StringMapHelper(
             "cache_data_props");
+    static final lib.AttributeHelper<java.time.Instant> _creation_time__helper = new lib.InstantAttributeHelper(
+            "creation_time");
 
     public static Builder builder() {
         return new Builder();
@@ -207,6 +225,7 @@ public class CacheResource implements Comparable<CacheResource> {
         private byte[] data;
         private String uniqueId;
         private Map<String, String> properties;
+        private java.time.Instant creationTime;
 
         private Builder() {
         }
@@ -225,6 +244,10 @@ public class CacheResource implements Comparable<CacheResource> {
         }
         public Builder properties(Map<String, String> properties) {
             this.properties = properties;
+            return this;
+        }
+        public Builder creationTime(java.time.Instant creationTime) {
+            this.creationTime = creationTime;
             return this;
         }
 
