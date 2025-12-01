@@ -125,6 +125,16 @@ public class [(${table.javaClass})] implements Comparable<[(${table.javaClass})]
         return 0;
     }
 
+    @Override
+    public String toString() {
+        final StringBuilder sb = new StringBuilder("[(${table.javaClass})]{");
+[# th:each="attribute, iterStat : ${table.attributes}"]
+        sb.append("[(${iterStat.first}?'':', ')][(${attribute.attribute})]='").append([(${attribute.attribute})]).append('\'');
+[/]
+        sb.append('}');
+        return sb.toString();
+    }
+
 
 [# th:each="attribute : ${table.attributes}"]
     static final lib.AttributeHelper<[(${attribute.javaType})]> [(${attribute.helper})] = new lib.[(${attribute.helperClass})]("[(${attribute.name})]");

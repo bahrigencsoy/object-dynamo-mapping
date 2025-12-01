@@ -187,6 +187,19 @@ public class GameScore implements Comparable<GameScore> {
         return 0;
     }
 
+    @Override
+    public String toString() {
+        final StringBuilder sb = new StringBuilder("GameScore{");
+
+        sb.append("userId='").append(userId).append('\'');
+        sb.append(", gameTitle='").append(gameTitle).append('\'');
+        sb.append(", gameGenre='").append(gameGenre).append('\'');
+        sb.append(", totalScore='").append(totalScore).append('\'');
+
+        sb.append('}');
+        return sb.toString();
+    }
+
     static final lib.AttributeHelper<String> _user_id__helper = new lib.StringAttributeHelper("user_id");
     static final lib.AttributeHelper<String> _game_title__helper = new lib.StringAttributeHelper("game_title");
     static final lib.AttributeHelper<String> _game_genre__helper = new lib.StringAttributeHelper("game_genre");

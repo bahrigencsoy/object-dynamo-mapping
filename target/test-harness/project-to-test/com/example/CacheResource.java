@@ -177,6 +177,19 @@ public class CacheResource implements Comparable<CacheResource> {
         return 0;
     }
 
+    @Override
+    public String toString() {
+        final StringBuilder sb = new StringBuilder("CacheResource{");
+
+        sb.append("key='").append(key).append('\'');
+        sb.append(", data='").append(data).append('\'');
+        sb.append(", uniqueId='").append(uniqueId).append('\'');
+        sb.append(", properties='").append(properties).append('\'');
+
+        sb.append('}');
+        return sb.toString();
+    }
+
     static final lib.AttributeHelper<String> _cache_item_key__helper = new lib.StringAttributeHelper("cache_item_key");
     static final lib.AttributeHelper<byte[]> _cached_data__helper = new lib.Base64ArrayAttributeHelper("cached_data");
     static final lib.AttributeHelper<String> _cached_item_unique_id__helper = new lib.StringAttributeHelper(
