@@ -89,6 +89,7 @@ public class IntegrationTest {
         assertEquals(2, em.queryGameScoreByUserId("aaa").execute().count());
         assertThrows(DynamoDbException.class, () -> em.queryGameScoreByUserId("bbb").userId().ne("xxx").execute());
         em.findGameScore("aaa", "space traveler").get().mutator().totalScore().delete().commit();
+        assertNotNull(em.findGameScore("aaa", "space traveler").get().gameGenre());
     }
 
     void step_106_update_item() {
@@ -125,8 +126,9 @@ public class IntegrationTest {
         for (int i = 0; i < threadCount; i++) {
             final int totalScore = i;
             new Thread(() -> {
-                phaser.arriveAndAwaitAdvance();
+                phaser.arriveAndAwaitAdvance(); // PHASE 0 - start at once
                 try {
+                    // Try to atomically add an entity, only one will succeed
                     GameScore previous = em.putGameScore("user", "game", null, totalScore, true);
                     if (previous.totalScore().equals(totalScore)) {
                         replacedCount.incrementAndGet();
@@ -136,20 +138,38 @@ public class IntegrationTest {
                 } catch (Exception ex) {
                     ex.printStackTrace();
                 }
-                phaser.arriveAndAwaitAdvance();
+
+                phaser.arriveAndAwaitAdvance(); // PHASE 1 - end of atomic put test
+
+                GameScore previous = em.findGameScore("user", "game").get();
+                phaser.arriveAndAwaitAdvance(); // PHASE 2 - start of atomic update test
+                // Increment the game score by one
+                previous.mutator().totalScore().increment(1).commit();
+                previous.mutator().totalScore().increment(5).commit();
+                previous.mutator().totalScore().increment(-2).commit();
+
+                phaser.arriveAndAwaitAdvance(); // PHASE 3 - end of atomic update test
                 for (int j = 0; j < 5; j++) {
                     Random rand = new Random();
                     em.putGameScore("user", "game " + rand.nextInt(), "x" + rand.nextInt(3), rand.nextInt(), false);
                 }
-                phaser.arriveAndAwaitAdvance();
+
+                phaser.arriveAndAwaitAdvance(); // PHASE 4 - end of test
             }).start();
         }
-        phaser.arriveAndAwaitAdvance();
-        phaser.arriveAndAwaitAdvance();
+        phaser.arriveAndAwaitAdvance(); // PHASE 0 - start at once
+
+        phaser.arriveAndAwaitAdvance(); // PHASE 1 - end of atomic put test
         System.err.format("Took %d msecs to insert with %d threads%n", System.currentTimeMillis() - startTime, threadCount);
         assertEquals(1, replacedCount.get());
         assertEquals(threadCount - 1, racedCount.get());
-        phaser.arriveAndAwaitAdvance();
+
+        em.findGameScore("user", "game").get().mutator().totalScore().setValue(100).commit();
+        phaser.arriveAndAwaitAdvance(); // PHASE 2 - start of atomic update test
+        phaser.arriveAndAwaitAdvance(); // PHASE 3 - end of atomic update test
+        assertEquals(100 + threadCount * 4, em.findGameScore("user", "game").get().totalScore());
+
+        phaser.arriveAndAwaitAdvance(); // PHASE 4 - end of test
         System.err.format("Insertions finished%n");
         assertEquals(1 + threadCount * 5, em.scanAllGameScore().count());
     }

@@ -155,6 +155,7 @@ class lib {
         private final AttributeHelper<T> helper;
         private boolean delete = false;
         private T value;
+        private T increment;
 
         GenericMutator(String attribute, P parent, AttributeHelper<T> helper) {
             this.parent = parent;
@@ -172,6 +173,11 @@ class lib {
             return parent;
         }
 
+        public P increment(T by) {
+            this.increment = by;
+            return parent;
+        }
+
         @Override
         void appendUpdateExpression(AtomicInteger counter, List<String> setExpressions, List<String> removeExpressions,
                 Map<String, String> expressionAttributeNames, Map<String, AttributeValue> expressionAttributeValues) {
@@ -179,13 +185,23 @@ class lib {
                 int deleteCounter = counter.getAndIncrement();
                 removeExpressions.add("#delete" + deleteCounter);
                 expressionAttributeNames.put("#delete" + deleteCounter, attribute);
-            } else {
+            }
+            if (value != null) {
                 int updateCounter = counter.getAndIncrement();
                 setExpressions.add(String.format("#sk%s = :sv%s", updateCounter, updateCounter));
                 expressionAttributeNames.put("#sk" + updateCounter, attribute);
                 AttributeValue.Builder builder = AttributeValue.builder();
                 builder = helper.build(builder, value);
                 expressionAttributeValues.put(":sv" + updateCounter, builder.build());
+            }
+            if (this.increment != null) {
+                int incrementCounter = counter.getAndIncrement();
+                setExpressions.add(
+                        String.format("#ik%s = #ik%s + :iv%s", incrementCounter, incrementCounter, incrementCounter));
+                expressionAttributeNames.put("#ik" + incrementCounter, attribute);
+                AttributeValue.Builder builder = AttributeValue.builder();
+                builder = helper.build(builder, increment);
+                expressionAttributeValues.put(":iv" + incrementCounter, builder.build());
             }
         }
     }
