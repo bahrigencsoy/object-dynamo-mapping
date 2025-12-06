@@ -94,7 +94,14 @@ public class GameScoreEntityManager {
                 throw e;
             }
         }
+    }
 
+    public GameScore putGameScore(GameScore object, boolean atomic) {
+        return putGameScore(
+
+                object.userId(), object.gameTitle(), object.gameGenre(), object.totalScore(),
+
+                atomic);
     }
 
     public Optional<GameScore> findGameScore(String userId, String gameTitle) {
@@ -364,7 +371,14 @@ public class GameScoreEntityManager {
                 throw e;
             }
         }
+    }
 
+    public CacheResource putCacheResource(CacheResource object, boolean atomic) {
+        return putCacheResource(
+
+                object.key(), object.data(), object.uniqueId(), object.properties(), object.creationTime(),
+
+                atomic);
     }
 
     public Optional<CacheResource> findCacheResource(String key) {

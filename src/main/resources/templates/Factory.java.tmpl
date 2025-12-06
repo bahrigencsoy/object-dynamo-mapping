@@ -28,7 +28,7 @@ public class [(${project.factoryClass})] {
     /**
       * Atomically puts an item or overwrite it.
       */
-    public [(${table.javaClass})] put[(${table.javaClass})]( [# th:insert="~{all-attributes-types}"][/], boolean atomic )
+    public [(${table.javaClass})] put[(${table.javaClass})]( [# th:insert="~{all-attributes-types}"/], boolean atomic )
     {
         if ([(${table.partitionKey.attribute})] == null) {
             throw new NullPointerException("Partition key \"[(${table.partitionKey.name})]\" is null");
@@ -73,8 +73,14 @@ public class [(${project.factoryClass})] {
               throw e;
           }
       }
+    }
 
-
+    public [(${table.javaClass})] put[(${table.javaClass})]([(${table.javaClass})] object, boolean atomic ) {
+        return put[(${table.javaClass})](
+[# th:each="attribute : ${table.attributes}"]
+            object.[(${attribute.attribute})](),
+[/]
+        atomic);
     }
 
      public Optional<[(${table.javaClass})]> find[(${table.javaClass})]( [# th:insert="~{key-attributes-types}"][/] )
