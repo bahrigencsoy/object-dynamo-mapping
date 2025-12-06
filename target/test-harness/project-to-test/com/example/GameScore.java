@@ -64,22 +64,22 @@ public class GameScore implements Comparable<GameScore> {
         }
 
         public GenericMutator<String, Mutator> userId() {
-            var mutator = new GenericMutator<>("user_id", this, _user_id__helper);
+            var mutator = new GenericMutator<String, Mutator>("user_id", this, _user_id__helper);
             mutators.add(mutator);
             return mutator;
         }
         public GenericMutator<String, Mutator> gameTitle() {
-            var mutator = new GenericMutator<>("game_title", this, _game_title__helper);
+            var mutator = new GenericMutator<String, Mutator>("game_title", this, _game_title__helper);
             mutators.add(mutator);
             return mutator;
         }
         public GenericMutator<String, Mutator> gameGenre() {
-            var mutator = new GenericMutator<>("game_genre", this, _game_genre__helper);
+            var mutator = new GenericMutator<String, Mutator>("game_genre", this, _game_genre__helper);
             mutators.add(mutator);
             return mutator;
         }
         public GenericMutator<Integer, Mutator> totalScore() {
-            var mutator = new GenericMutator<>("total_score", this, _total_score__helper);
+            var mutator = new GenericMutator<Integer, Mutator>("total_score", this, _total_score__helper);
             mutators.add(mutator);
             return mutator;
         }

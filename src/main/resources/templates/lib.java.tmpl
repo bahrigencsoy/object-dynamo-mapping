@@ -150,8 +150,8 @@ class lib {
 
     public static class GenericMutator<T, P> extends lib.FieldMutator {
 
-        private final String attribute;
-        private final P parent;
+        protected final String attribute;
+        protected final P parent;
         private final AttributeHelper<T> helper;
         private boolean delete = false;
         private T value;
@@ -200,6 +200,36 @@ class lib {
                 AttributeValue.Builder builder = AttributeValue.builder();
                 builder = helper.build(builder, increment);
                 expressionAttributeValues.put(":iv" + incrementCounter, builder.build());
+            }
+        }
+    }
+
+    public static class StringMapMutator<P> extends GenericMutator<Map<String, String>, P> {
+
+        private final List<Map.Entry<String, String>> puts = new ArrayList<>();
+
+        StringMapMutator(String attribute, P parent, AttributeHelper<Map<String, String>> helper) {
+            super(attribute, parent, helper);
+        }
+
+        public P put(String key, String value) {
+            puts.add(Map.entry(key, value));
+            return parent;
+        }
+
+        @Override
+        void appendUpdateExpression(AtomicInteger counter, List<String> setExpressions, List<String> removeExpressions,
+                                    Map<String, String> expressionAttributeNames, Map<String, AttributeValue> expressionAttributeValues) {
+            super.appendUpdateExpression(counter, setExpressions, removeExpressions, expressionAttributeNames,
+                    expressionAttributeValues);
+            for (Map.Entry<String, String> entry : puts) {
+                int myCounter = counter.incrementAndGet();
+                int itemCounter = counter.incrementAndGet();
+
+                setExpressions.add(String.format("#mm%d.#mk%d = :mmv%d", myCounter, itemCounter, itemCounter));
+                expressionAttributeNames.put("#mm" + myCounter, attribute);
+                expressionAttributeNames.put("#mk" + itemCounter, entry.getKey());
+                expressionAttributeValues.put(":mmv" + itemCounter, AttributeValue.builder().s(entry.getValue()).build());
             }
         }
     }

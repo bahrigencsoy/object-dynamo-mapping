@@ -68,27 +68,28 @@ public class CacheResource implements Comparable<CacheResource> {
         }
 
         public GenericMutator<String, Mutator> key() {
-            var mutator = new GenericMutator<>("cache_item_key", this, _cache_item_key__helper);
+            var mutator = new GenericMutator<String, Mutator>("cache_item_key", this, _cache_item_key__helper);
             mutators.add(mutator);
             return mutator;
         }
         public GenericMutator<byte[], Mutator> data() {
-            var mutator = new GenericMutator<>("cached_data", this, _cached_data__helper);
+            var mutator = new GenericMutator<byte[], Mutator>("cached_data", this, _cached_data__helper);
             mutators.add(mutator);
             return mutator;
         }
         public GenericMutator<String, Mutator> uniqueId() {
-            var mutator = new GenericMutator<>("cached_item_unique_id", this, _cached_item_unique_id__helper);
+            var mutator = new GenericMutator<String, Mutator>("cached_item_unique_id", this,
+                    _cached_item_unique_id__helper);
             mutators.add(mutator);
             return mutator;
         }
-        public GenericMutator<Map<String, String>, Mutator> properties() {
-            var mutator = new GenericMutator<>("cache_data_props", this, _cache_data_props__helper);
+        public StringMapMutator<Mutator> properties() {
+            var mutator = new StringMapMutator<Mutator>("cache_data_props", this, _cache_data_props__helper);
             mutators.add(mutator);
             return mutator;
         }
         public GenericMutator<java.time.Instant, Mutator> creationTime() {
-            var mutator = new GenericMutator<>("creation_time", this, _creation_time__helper);
+            var mutator = new GenericMutator<java.time.Instant, Mutator>("creation_time", this, _creation_time__helper);
             mutators.add(mutator);
             return mutator;
         }

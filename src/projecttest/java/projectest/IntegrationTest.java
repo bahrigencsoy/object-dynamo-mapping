@@ -9,6 +9,7 @@ import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
 import software.amazon.awssdk.services.dynamodb.model.DynamoDbException;
 
 import java.time.Instant;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Random;
 import java.util.concurrent.Phaser;
@@ -114,6 +115,18 @@ public class IntegrationTest {
         cache = em.findCacheResource("a").get();
         assertArrayEquals(new byte[]{1, 2, 3}, cache.data());
         assertEquals(Map.of("b", "y", "a", "x"), cache.properties());
+        cache.mutator().properties().put("b", "yy").commit();
+        cache = em.findCacheResource("a").get();
+        assertEquals("yy", cache.properties().get("b"));
+        cache.mutator().delete();
+        cache = em.putCacheResource(CacheResource.builder().key("xyz").uniqueId("jjj").build(), false);
+        // You cannot update a non initialized map
+        assertThrows(DynamoDbException.class, () -> em.findCacheResource("xyz").get().mutator().properties().put("aa", "bb").commit());
+        cache = em.putCacheResource(CacheResource.builder().key("xyz").properties(Map.of()).build(), false);
+        cache = em.findCacheResource("xyz").get();
+        assertNull(cache.uniqueId());
+        cache.mutator().properties().put("klm", "qrs").commit();
+        assertEquals("qrs", em.findCacheResource("xyz").get().properties().get("klm"));
         cache.mutator().delete();
     }
 

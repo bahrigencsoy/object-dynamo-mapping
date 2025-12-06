@@ -44,4 +44,11 @@ public class ExtendedDynamoAttribute extends DynamoAttribute {
     public String getHelper() {
         return "_" + getName() + "__helper";
     }
+
+    public String getMutatorClass() {
+        return switch (getType()){
+            case X_STRINGMAP -> "StringMapMutator<Mutator>";
+            default -> "GenericMutator<%s, Mutator>".formatted(getJavaType());
+        };
+    }
 }
