@@ -54,7 +54,7 @@ public class IntegrationTest {
     }
 
     void step_003_create_em() {
-        em = new GameScoreEntityManager(client);
+        em = new GameScoreEntityManager(client, "cached_resource_odm_test");
     }
 
     void step_101_insert_1_item() {

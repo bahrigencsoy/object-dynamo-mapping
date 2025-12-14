@@ -13,6 +13,7 @@ public class [(${table.javaClass})] implements Comparable<[(${table.javaClass})]
     private final [(${attribute.javaType})] [(${attribute.attribute})];
 [/]
     private transient DynamoDbClient _client;
+    private transient String _tableName;
 
     [(${table.javaClass})](Builder b)
     {[# th:each="attribute : ${table.attributes}"]
@@ -29,21 +30,27 @@ public class [(${table.javaClass})] implements Comparable<[(${table.javaClass})]
         this._client = client;
     }
 
+    void _setTableName(String tableName) {
+        this._tableName = tableName;
+    }
+
     public Mutator mutator() {
         var map = new HashMap<String, AttributeValue>();
         [# th:insert="~{key}"][/];
-        return new Mutator(_client, map);
+        return new Mutator(_client, map, _tableName);
     }
 
     public static class Mutator {
 
         private final List<FieldMutator> mutators = new ArrayList<>();
         private final DynamoDbClient client;
+        private final String tableName;
         private final Map<String, AttributeValue> key;
 
-        Mutator(DynamoDbClient client, Map<String, AttributeValue> key) {
+        Mutator(DynamoDbClient client, Map<String, AttributeValue> key, String tableName) {
             this.client = client;
             this.key = Map.copyOf(key);
+            this.tableName = tableName;
         }
 
 [# th:each="attribute : ${table.attributes}"]
@@ -77,7 +84,7 @@ public class [(${table.javaClass})] implements Comparable<[(${table.javaClass})]
             }
             var updateItemRequestBuilder = UpdateItemRequest.builder()
                     .key(key)
-                    .tableName("[(${table.name})]")
+                    .tableName(tableName)
                     .updateExpression(updateExpression.toString())
                     .expressionAttributeNames(expressionAttributeNames)
                     .returnValues(ReturnValue.ALL_NEW);
@@ -94,7 +101,7 @@ public class [(${table.javaClass})] implements Comparable<[(${table.javaClass})]
         }
 
         public void delete() {
-            DeleteItemRequest request = DeleteItemRequest.builder().tableName("[(${table.name})]").key(key).build();
+            DeleteItemRequest request = DeleteItemRequest.builder().tableName(tableName).key(key).build();
             var response = client.deleteItem(request);
         }
     }

@@ -9,7 +9,7 @@ public class Usage {
 
     void initializeEntityManager() {
         // You need to supply valid DynamoDbClient instance
-        em = new GameScoreEntityManager(null /* replace */);
+        em = new GameScoreEntityManager(null /* replace */, "cached_resource_odm_test");
     }
 
     void insertEntity() {

@@ -17,6 +17,7 @@ public class CacheResource implements Comparable<CacheResource> {
     private final java.time.Instant creationTime;
 
     private transient DynamoDbClient _client;
+    private transient String _tableName;
 
     CacheResource(Builder b) {
         this.key = b.key;
@@ -50,21 +51,27 @@ public class CacheResource implements Comparable<CacheResource> {
         this._client = client;
     }
 
+    void _setTableName(String tableName) {
+        this._tableName = tableName;
+    }
+
     public Mutator mutator() {
         var map = new HashMap<String, AttributeValue>();
         CacheResource._cache_item_key__helper.contributeToMap(map, key);;
-        return new Mutator(_client, map);
+        return new Mutator(_client, map, _tableName);
     }
 
     public static class Mutator {
 
         private final List<FieldMutator> mutators = new ArrayList<>();
         private final DynamoDbClient client;
+        private final String tableName;
         private final Map<String, AttributeValue> key;
 
-        Mutator(DynamoDbClient client, Map<String, AttributeValue> key) {
+        Mutator(DynamoDbClient client, Map<String, AttributeValue> key, String tableName) {
             this.client = client;
             this.key = Map.copyOf(key);
+            this.tableName = tableName;
         }
 
         public GenericMutator<String, Mutator> key() {
@@ -115,7 +122,7 @@ public class CacheResource implements Comparable<CacheResource> {
                 updateExpression.append(String.join(",", removeExpressions));
                 updateExpression.append(" ");
             }
-            var updateItemRequestBuilder = UpdateItemRequest.builder().key(key).tableName("cached_resource_odm_test")
+            var updateItemRequestBuilder = UpdateItemRequest.builder().key(key).tableName(tableName)
                     .updateExpression(updateExpression.toString()).expressionAttributeNames(expressionAttributeNames)
                     .returnValues(ReturnValue.ALL_NEW);
             if (!expressionAttributeValues.isEmpty()) {
@@ -147,8 +154,7 @@ public class CacheResource implements Comparable<CacheResource> {
         }
 
         public void delete() {
-            DeleteItemRequest request = DeleteItemRequest.builder().tableName("cached_resource_odm_test").key(key)
-                    .build();
+            DeleteItemRequest request = DeleteItemRequest.builder().tableName(tableName).key(key).build();
             var response = client.deleteItem(request);
         }
     }

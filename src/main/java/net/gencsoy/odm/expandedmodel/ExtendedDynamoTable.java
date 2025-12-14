@@ -128,4 +128,8 @@ public class ExtendedDynamoTable extends DynamoTable {
             return findAttributeByName(getPrimaryIndex().getSortKey());
         }
     }
+
+    public String getTableVar() {
+        return "table_" + getJavaClass();
+    }
 }

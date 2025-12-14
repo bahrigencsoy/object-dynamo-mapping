@@ -14,8 +14,16 @@ public class GameScoreEntityManager {
 
     private final DynamoDbClient client;
 
-    public GameScoreEntityManager(DynamoDbClient client) {
+    private final String table_GameScore;
+    private final String table_CacheResource;
+
+    public GameScoreEntityManager(DynamoDbClient client, String table_CacheResource) {
         this.client = client;
+
+        this.table_CacheResource = table_CacheResource.intern();
+
+        this.table_GameScore = "game_scores_odm_test";
+
     }
 
     private static GameScore __constructGameScore(Map<String, AttributeValue> map) {
@@ -69,7 +77,7 @@ public class GameScoreEntityManager {
             GameScore._total_score__helper.contributeToMap(map, totalScore);
         }
 
-        var builder = PutItemRequest.builder().tableName("game_scores_odm_test").item(map);
+        var builder = PutItemRequest.builder().tableName(table_GameScore).item(map);
         if (atomic) {
             builder.conditionExpression("attribute_not_exists(user_id) AND attribute_not_exists(game_title)");
             builder.returnValuesOnConditionCheckFailure(ReturnValuesOnConditionCheckFailure.ALL_OLD);
@@ -84,11 +92,13 @@ public class GameScoreEntityManager {
             }
             var obj = __constructGameScore(map);
             obj._setClient(client);
+            obj._setTableName(table_GameScore);
             return obj;
         } catch (ConditionalCheckFailedException e) {
             if (e.hasItem() && atomic) {
                 var previousObject = __constructGameScore(e.item());
                 previousObject._setClient(client);
+                previousObject._setTableName(table_GameScore);
                 return previousObject;
             } else {
                 throw e;
@@ -110,7 +120,7 @@ public class GameScoreEntityManager {
 
         GameScore._game_title__helper.contributeToMap(map, gameTitle);
 
-        GetItemRequest getItemRequest = GetItemRequest.builder().tableName("game_scores_odm_test").key(map).build();
+        GetItemRequest getItemRequest = GetItemRequest.builder().tableName(table_GameScore).key(map).build();
 
         GetItemResponse result = client.getItem(getItemRequest);
 
@@ -120,6 +130,7 @@ public class GameScoreEntityManager {
         map = result.item();
         var obj = __constructGameScore(map);
         obj._setClient(client);
+        obj._setTableName(table_GameScore);
         return Optional.of(obj);
     }
 
@@ -192,7 +203,7 @@ public class GameScoreEntityManager {
                 };
             }
         };
-        query._setTableName("game_scores_odm_test");
+        query._setTableName(table_GameScore);
 
         query.userId().eq(userId);
 
@@ -215,7 +226,7 @@ public class GameScoreEntityManager {
                 };
             }
         };
-        query._setTableName("game_scores_odm_test");
+        query._setTableName(table_GameScore);
 
         query._setIndexName("game_genres_idx");
 
@@ -225,7 +236,7 @@ public class GameScoreEntityManager {
     }
 
     public java.util.stream.Stream<GameScore> scanAllGameScore() {
-        var iterator = executeGameScoreScan(ScanRequest.builder().tableName("game_scores_odm_test").build());
+        var iterator = executeGameScoreScan(ScanRequest.builder().tableName(table_GameScore).build());
         var split = Spliterators.spliteratorUnknownSize(iterator,
                 Spliterator.ORDERED | Spliterator.IMMUTABLE | Spliterator.NONNULL);
         return StreamSupport.stream(split, false);
@@ -258,6 +269,7 @@ public class GameScoreEntityManager {
                 Map<String, AttributeValue> map = currentIterator.get().next();
                 var obj = __constructGameScore(map);
                 obj._setClient(client);
+                obj._setTableName(table_GameScore);
                 return obj;
             }
         };
@@ -290,6 +302,7 @@ public class GameScoreEntityManager {
                 Map<String, AttributeValue> map = currentIterator.get().next();
                 var obj = __constructGameScore(map);
                 obj._setClient(client);
+                obj._setTableName(table_GameScore);
                 return obj;
             }
         };
@@ -346,7 +359,7 @@ public class GameScoreEntityManager {
             CacheResource._creation_time__helper.contributeToMap(map, creationTime);
         }
 
-        var builder = PutItemRequest.builder().tableName("cached_resource_odm_test").item(map);
+        var builder = PutItemRequest.builder().tableName(table_CacheResource).item(map);
         if (atomic) {
             builder.conditionExpression("attribute_not_exists(cache_item_key)");
             builder.returnValuesOnConditionCheckFailure(ReturnValuesOnConditionCheckFailure.ALL_OLD);
@@ -361,11 +374,13 @@ public class GameScoreEntityManager {
             }
             var obj = __constructCacheResource(map);
             obj._setClient(client);
+            obj._setTableName(table_CacheResource);
             return obj;
         } catch (ConditionalCheckFailedException e) {
             if (e.hasItem() && atomic) {
                 var previousObject = __constructCacheResource(e.item());
                 previousObject._setClient(client);
+                previousObject._setTableName(table_CacheResource);
                 return previousObject;
             } else {
                 throw e;
@@ -385,7 +400,7 @@ public class GameScoreEntityManager {
         Map<String, AttributeValue> map = new HashMap<String, AttributeValue>();
         CacheResource._cache_item_key__helper.contributeToMap(map, key);
 
-        GetItemRequest getItemRequest = GetItemRequest.builder().tableName("cached_resource_odm_test").key(map).build();
+        GetItemRequest getItemRequest = GetItemRequest.builder().tableName(table_CacheResource).key(map).build();
 
         GetItemResponse result = client.getItem(getItemRequest);
 
@@ -395,6 +410,7 @@ public class GameScoreEntityManager {
         map = result.item();
         var obj = __constructCacheResource(map);
         obj._setClient(client);
+        obj._setTableName(table_CacheResource);
         return Optional.of(obj);
     }
 
@@ -472,7 +488,7 @@ public class GameScoreEntityManager {
                 };
             }
         };
-        query._setTableName("cached_resource_odm_test");
+        query._setTableName(table_CacheResource);
 
         query.key().eq(key);
 
@@ -496,7 +512,7 @@ public class GameScoreEntityManager {
                 };
             }
         };
-        query._setTableName("cached_resource_odm_test");
+        query._setTableName(table_CacheResource);
 
         query._setIndexName("cache_id_idx");
 
@@ -506,7 +522,7 @@ public class GameScoreEntityManager {
     }
 
     public java.util.stream.Stream<CacheResource> scanAllCacheResource() {
-        var iterator = executeCacheResourceScan(ScanRequest.builder().tableName("cached_resource_odm_test").build());
+        var iterator = executeCacheResourceScan(ScanRequest.builder().tableName(table_CacheResource).build());
         var split = Spliterators.spliteratorUnknownSize(iterator,
                 Spliterator.ORDERED | Spliterator.IMMUTABLE | Spliterator.NONNULL);
         return StreamSupport.stream(split, false);
@@ -539,6 +555,7 @@ public class GameScoreEntityManager {
                 Map<String, AttributeValue> map = currentIterator.get().next();
                 var obj = __constructCacheResource(map);
                 obj._setClient(client);
+                obj._setTableName(table_CacheResource);
                 return obj;
             }
         };
@@ -571,6 +588,7 @@ public class GameScoreEntityManager {
                 Map<String, AttributeValue> map = currentIterator.get().next();
                 var obj = __constructCacheResource(map);
                 obj._setClient(client);
+                obj._setTableName(table_CacheResource);
                 return obj;
             }
         };

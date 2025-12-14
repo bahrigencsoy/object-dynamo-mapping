@@ -42,7 +42,6 @@
       ]
     },
     {
-      "name": "cached_resource_odm_test",
       "javaClass": "CacheResource",
       "attributes": [
         {

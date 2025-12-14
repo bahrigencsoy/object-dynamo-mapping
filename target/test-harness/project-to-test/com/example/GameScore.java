@@ -16,6 +16,7 @@ public class GameScore implements Comparable<GameScore> {
     private final Integer totalScore;
 
     private transient DynamoDbClient _client;
+    private transient String _tableName;
 
     GameScore(Builder b) {
         this.userId = b.userId;
@@ -44,23 +45,29 @@ public class GameScore implements Comparable<GameScore> {
         this._client = client;
     }
 
+    void _setTableName(String tableName) {
+        this._tableName = tableName;
+    }
+
     public Mutator mutator() {
         var map = new HashMap<String, AttributeValue>();
         GameScore._user_id__helper.contributeToMap(map, userId);
 
         GameScore._game_title__helper.contributeToMap(map, gameTitle);;
-        return new Mutator(_client, map);
+        return new Mutator(_client, map, _tableName);
     }
 
     public static class Mutator {
 
         private final List<FieldMutator> mutators = new ArrayList<>();
         private final DynamoDbClient client;
+        private final String tableName;
         private final Map<String, AttributeValue> key;
 
-        Mutator(DynamoDbClient client, Map<String, AttributeValue> key) {
+        Mutator(DynamoDbClient client, Map<String, AttributeValue> key, String tableName) {
             this.client = client;
             this.key = Map.copyOf(key);
+            this.tableName = tableName;
         }
 
         public GenericMutator<String, Mutator> userId() {
@@ -105,7 +112,7 @@ public class GameScore implements Comparable<GameScore> {
                 updateExpression.append(String.join(",", removeExpressions));
                 updateExpression.append(" ");
             }
-            var updateItemRequestBuilder = UpdateItemRequest.builder().key(key).tableName("game_scores_odm_test")
+            var updateItemRequestBuilder = UpdateItemRequest.builder().key(key).tableName(tableName)
                     .updateExpression(updateExpression.toString()).expressionAttributeNames(expressionAttributeNames)
                     .returnValues(ReturnValue.ALL_NEW);
             if (!expressionAttributeValues.isEmpty()) {
@@ -134,7 +141,7 @@ public class GameScore implements Comparable<GameScore> {
         }
 
         public void delete() {
-            DeleteItemRequest request = DeleteItemRequest.builder().tableName("game_scores_odm_test").key(key).build();
+            DeleteItemRequest request = DeleteItemRequest.builder().tableName(tableName).key(key).build();
             var response = client.deleteItem(request);
         }
     }

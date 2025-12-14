@@ -13,9 +13,18 @@ import static [(${project.packageName})].lib.*;
 public class [(${project.factoryClass})] {
 
     private final DynamoDbClient client;
+[# th:each="table : ${project.tables}"]
+    private final String [(${table.tableVar})];
+[/]
 
-    public [(${project.factoryClass})](DynamoDbClient client) {
+    public [(${project.factoryClass})](DynamoDbClient client [# th:each="table, iterStat : ${project.unnamedTables}"], String [(${table.tableVar})][/]) {
         this.client = client;
+[# th:each="table : ${project.unnamedTables}"]
+        this.[(${table.tableVar})] = [(${table.tableVar})].intern();
+[/]
+[# th:each="table : ${project.namedTables}"]
+        this.[(${table.tableVar})] = "[(${table.name})]";
+[/]
     }
 [# th:each="table : ${project.tables}"]
     private static [(${table.javaClass})] __construct[(${table.javaClass})](Map<String, AttributeValue> map) {
@@ -47,7 +56,7 @@ public class [(${project.factoryClass})] {
         }
 [/]
         var builder = PutItemRequest.builder()
-                            .tableName("[(${table.name})]")
+                            .tableName([(${table.tableVar})])
                             .item(map);
         if (atomic) {
             builder.conditionExpression("[(${table.putConditionExpression})]");
@@ -63,11 +72,13 @@ public class [(${project.factoryClass})] {
             }
             var obj = __construct[(${table.javaClass})](map);
             obj._setClient(client);
+            obj._setTableName([(${table.tableVar})]);
             return obj;
         } catch (ConditionalCheckFailedException e) {
           if (e.hasItem() && atomic){
               var previousObject = __construct[(${table.javaClass})](e.item());
               previousObject._setClient(client);
+              previousObject._setTableName([(${table.tableVar})]);
               return previousObject;
           } else {
               throw e;
@@ -89,7 +100,7 @@ public class [(${project.factoryClass})] {
         [# th:insert="~{key}"][/]
 
         GetItemRequest getItemRequest = GetItemRequest.builder()
-                                            .tableName("[(${table.name})]")
+                                            .tableName([(${table.tableVar})])
                                             .key(map)
                                         .build();
 
@@ -101,6 +112,7 @@ public class [(${project.factoryClass})] {
         map = result.item();
         var obj = __construct[(${table.javaClass})](map);
         obj._setClient(client);
+        obj._setTableName([(${table.tableVar})]);
         return Optional.of(obj);
      }
 
@@ -160,7 +172,7 @@ public [(${table.javaClass})]Query query[(${table.javaClass})]By[(${#strings.cap
                 };
             }
         };
-        query._setTableName("[(${table.name})]");
+        query._setTableName([(${table.tableVar})]);
         [# th:if="${index.indexName} != null"]
         query._setIndexName("[(${index.indexName})]");
         [/]
@@ -173,7 +185,7 @@ public [(${table.javaClass})]Query query[(${table.javaClass})]By[(${#strings.cap
 
 
      public java.util.stream.Stream<[(${table.javaClass})]> scanAll[(${table.javaClass})]() {
-        var iterator = execute[(${table.javaClass})]Scan(ScanRequest.builder().tableName("[(${table.name})]").build());
+        var iterator = execute[(${table.javaClass})]Scan(ScanRequest.builder().tableName([(${table.tableVar})]).build());
         var split = Spliterators.spliteratorUnknownSize(iterator, Spliterator.ORDERED | Spliterator.IMMUTABLE | Spliterator.NONNULL);
         return StreamSupport.stream(split, false);
      }
@@ -204,6 +216,7 @@ public [(${table.javaClass})]Query query[(${table.javaClass})]By[(${#strings.cap
                 Map<String, AttributeValue> map = currentIterator.get().next();
                 var obj = __construct[(${table.javaClass})](map);
                 obj._setClient(client);
+                obj._setTableName([(${table.tableVar})]);
                 return obj;
             }
         };
@@ -236,6 +249,7 @@ public [(${table.javaClass})]Query query[(${table.javaClass})]By[(${#strings.cap
                 Map<String, AttributeValue> map = currentIterator.get().next();
                 var obj = __construct[(${table.javaClass})](map);
                 obj._setClient(client);
+                obj._setTableName([(${table.tableVar})]);
                 return obj;
             }
         };
