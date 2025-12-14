@@ -6,6 +6,7 @@ import com.example.GameScoreEntityManager;
 import software.amazon.awssdk.http.apache.ApacheHttpClient;
 import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
+import software.amazon.awssdk.services.dynamodb.model.ConditionalCheckFailedException;
 import software.amazon.awssdk.services.dynamodb.model.DynamoDbException;
 
 import java.time.Instant;
@@ -35,6 +36,7 @@ public class IntegrationTest {
         test.step_105_more_detailed_queries();
         test.step_106_update_item();
         test.step_107_scan_items();
+        test.step_108_conditional_update();
         test.step_111_cache_item_tests();
         test.step_201_raced_atomic_puts();
         test.step_300_query_by_global_secondary_index();
@@ -107,6 +109,22 @@ public class IntegrationTest {
             gs.mutator().delete();
         });
         assertEquals(3, count.get());
+    }
+
+    void step_108_conditional_update() {
+        GameScore gs = em.putGameScore("cond", "cond-title", "adventure", 100, false);
+        gs = gs.mutator().totalScore().setValue(101).commit();
+        assertThrows(ConditionalCheckFailedException.class, () -> em.findGameScore("cond", "cond-title").get().mutator().totalScore().setValue(200).totalScore().condition(100).commit());
+        assertEquals(101, em.findGameScore("cond", "cond-title").get().totalScore());
+        gs.mutator()
+                .totalScore().increment(99)
+                .totalScore().condition(101)
+                .gameGenre().condition("adventure")
+                .gameGenre().setValue("shooter")
+                .commit();
+        assertEquals(200, em.findGameScore("cond", "cond-title").get().totalScore());
+        assertEquals("shooter", em.findGameScore("cond", "cond-title").get().gameGenre());
+        em.findGameScore("cond", "cond-title").get().mutator().delete();
     }
 
     void step_111_cache_item_tests() {

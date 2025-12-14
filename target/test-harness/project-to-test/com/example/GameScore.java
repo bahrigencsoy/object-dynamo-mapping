@@ -46,7 +46,7 @@ public class GameScore implements Comparable<GameScore> {
     }
 
     void _setTableName(String tableName) {
-        this._tableName = tableName;
+        this._tableName = Objects.requireNonNull(tableName);
     }
 
     public Mutator mutator() {
@@ -67,7 +67,7 @@ public class GameScore implements Comparable<GameScore> {
         Mutator(DynamoDbClient client, Map<String, AttributeValue> key, String tableName) {
             this.client = client;
             this.key = Map.copyOf(key);
-            this.tableName = tableName;
+            this.tableName = Objects.requireNonNull(tableName);
         }
 
         public GenericMutator<String, Mutator> userId() {
@@ -95,11 +95,12 @@ public class GameScore implements Comparable<GameScore> {
             AtomicInteger counter = new AtomicInteger();
             List<String> setExpressions = new ArrayList<>();
             List<String> removeExpressions = new ArrayList<>();
+            List<String> conditionExpressions = new ArrayList<>();
             Map<String, String> expressionAttributeNames = new HashMap<>();
             Map<String, AttributeValue> expressionAttributeValues = new HashMap<>();
             for (var mutator : mutators) {
-                mutator.appendUpdateExpression(counter, setExpressions, removeExpressions, expressionAttributeNames,
-                        expressionAttributeValues);
+                mutator.appendUpdateExpression(counter, setExpressions, removeExpressions, conditionExpressions,
+                        expressionAttributeNames, expressionAttributeValues);
             }
             StringBuilder updateExpression = new StringBuilder();
             if (!setExpressions.isEmpty()) {
@@ -117,6 +118,9 @@ public class GameScore implements Comparable<GameScore> {
                     .returnValues(ReturnValue.ALL_NEW);
             if (!expressionAttributeValues.isEmpty()) {
                 updateItemRequestBuilder.expressionAttributeValues(expressionAttributeValues);
+            }
+            if (!conditionExpressions.isEmpty()) {
+                updateItemRequestBuilder.conditionExpression(String.join(",", conditionExpressions));
             }
             UpdateItemResponse response = client.updateItem(updateItemRequestBuilder.build());
             Map<String, AttributeValue> map = response.attributes();
@@ -137,6 +141,7 @@ public class GameScore implements Comparable<GameScore> {
 
             var obj = builder.build();
             obj._setClient(client);
+            obj._setTableName(tableName);
             return obj;
         }
 

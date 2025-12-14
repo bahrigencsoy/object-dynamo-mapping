@@ -173,6 +173,7 @@ class lib {
         private boolean delete = false;
         private T value;
         private T increment;
+        private T condition;
 
         GenericMutator(String attribute, P parent, AttributeHelper<T> helper) {
             this.parent = parent;
@@ -195,9 +196,15 @@ class lib {
             return parent;
         }
 
+        public P condition(T eq) {
+            this.condition = eq;
+            return parent;
+        }
+
         @Override
         void appendUpdateExpression(AtomicInteger counter, List<String> setExpressions, List<String> removeExpressions,
-                Map<String, String> expressionAttributeNames, Map<String, AttributeValue> expressionAttributeValues) {
+                List<String> conditionExpressions, Map<String, String> expressionAttributeNames,
+                Map<String, AttributeValue> expressionAttributeValues) {
             if (delete) {
                 int deleteCounter = counter.getAndIncrement();
                 removeExpressions.add("#delete" + deleteCounter);
@@ -220,6 +227,14 @@ class lib {
                 builder = helper.build(builder, increment);
                 expressionAttributeValues.put(":iv" + incrementCounter, builder.build());
             }
+            if (this.condition != null) {
+                int conditionCounter = counter.getAndIncrement();
+                conditionExpressions.add(String.format("#ck%s = :cv%s", conditionCounter, conditionCounter));
+                expressionAttributeNames.put("#ck" + conditionCounter, attribute);
+                AttributeValue.Builder builder = AttributeValue.builder();
+                builder = helper.build(builder, condition);
+                expressionAttributeValues.put(":cv" + conditionCounter, builder.build());
+            }
         }
     }
 
@@ -238,9 +253,10 @@ class lib {
 
         @Override
         void appendUpdateExpression(AtomicInteger counter, List<String> setExpressions, List<String> removeExpressions,
-                Map<String, String> expressionAttributeNames, Map<String, AttributeValue> expressionAttributeValues) {
-            super.appendUpdateExpression(counter, setExpressions, removeExpressions, expressionAttributeNames,
-                    expressionAttributeValues);
+                List<String> conditionExpressions, Map<String, String> expressionAttributeNames,
+                Map<String, AttributeValue> expressionAttributeValues) {
+            super.appendUpdateExpression(counter, setExpressions, removeExpressions, conditionExpressions,
+                    expressionAttributeNames, expressionAttributeValues);
             for (Map.Entry<String, String> entry : puts) {
                 int myCounter = counter.incrementAndGet();
                 int itemCounter = counter.incrementAndGet();
@@ -301,7 +317,7 @@ class lib {
 
     abstract static class FieldMutator {
         abstract void appendUpdateExpression(AtomicInteger counter, List<String> setExpressions,
-                List<String> removeExpressions, Map<String, String> expressionAttributeNames,
-                Map<String, AttributeValue> expressionAttributeValues);
+                List<String> removeExpressions, List<String> conditionExpression,
+                Map<String, String> expressionAttributeNames, Map<String, AttributeValue> expressionAttributeValues);
     }
 }
