@@ -9,7 +9,6 @@ import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
 import software.amazon.awssdk.services.dynamodb.model.DynamoDbException;
 
 import java.time.Instant;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Random;
 import java.util.concurrent.Phaser;

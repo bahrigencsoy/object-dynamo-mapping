@@ -106,6 +106,23 @@ class lib {
         }
     }
 
+    static class BooleanAttributeHelper extends BaseAttributeHelper<Boolean> {
+
+        public BooleanAttributeHelper(String attributeName) {
+            super(attributeName);
+        }
+
+        @Override
+        public AttributeValue.Builder build(AttributeValue.Builder builder, Boolean value) {
+            return builder.bool(value);
+        }
+
+        @Override
+        public Boolean extract(AttributeValue value) {
+            return value.bool();
+        }
+    }
+
     static class StringMapHelper extends BaseAttributeHelper<Map<String, String>> {
 
         StringMapHelper(String attributeName) {

@@ -11,6 +11,7 @@ public class ExtendedDynamoAttribute extends DynamoAttribute {
                 case STRING -> "String";
                 case BINARY -> "byte[]";
                 case NUMBER -> "Long";
+                case BOOLEAN -> "Boolean";
                 case X_STRINGMAP -> "Map<String, String>";
                 case X_INSTANT -> "java.time.Instant";
             };
@@ -34,6 +35,8 @@ public class ExtendedDynamoAttribute extends DynamoAttribute {
                 } else {
                     throw new IllegalArgumentException(javaType + " is not suitable for NUMBER");
                 }
+            case BOOLEAN:
+                yield "BooleanAttributeHelper";
             case X_STRINGMAP:
                 yield "StringMapHelper";
             case X_INSTANT:
