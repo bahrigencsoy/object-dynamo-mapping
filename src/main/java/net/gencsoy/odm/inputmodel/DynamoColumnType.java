@@ -6,5 +6,6 @@ public enum DynamoColumnType {
     NUMBER,
     BOOLEAN,
     X_STRINGMAP,
-    X_INSTANT
+    X_INSTANT,
+    X_STRINGMULTIMAP
 }

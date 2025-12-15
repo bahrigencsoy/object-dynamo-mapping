@@ -40,7 +40,7 @@ public class Usage {
 [See the input json](./src/test/resources/project-to-test/model.json)
 ```json
 {
-  "version": "0.3",
+  "version": "0.4",
   "packageName": "com.example",
   "factoryClass": "GameScoreEntityManager",
   "tables": [
@@ -106,6 +106,11 @@ public class Usage {
           "attribute": "properties"
         },
         {
+          "name": "cache_data_extended_props",
+          "type": "X_STRINGMULTIMAP",
+          "attribute": "extendedProperties"
+        },
+        {
           "name": "creation_time",
           "type": "X_INSTANT",
           "attribute": "creationTime"
@@ -165,7 +170,7 @@ public class Usage {
             <plugin>
                 <groupId>net.gencsoy.odm</groupId>
                 <artifactId>odm-maven-plugin</artifactId>
-                <version>0.3-SNAPSHOT</version>
+                <version>0.4-SNAPSHOT</version>
                 <executions>
                     <execution>
                         <id>generate-dynamo-files</id>

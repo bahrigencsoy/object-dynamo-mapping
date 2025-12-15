@@ -10,10 +10,13 @@ import software.amazon.awssdk.services.dynamodb.model.ConditionalCheckFailedExce
 import software.amazon.awssdk.services.dynamodb.model.DynamoDbException;
 
 import java.time.Instant;
+import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Random;
 import java.util.concurrent.Phaser;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.IntStream;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -41,6 +44,7 @@ public class IntegrationTest {
         test.step_201_raced_atomic_puts();
         test.step_300_query_by_global_secondary_index();
         test.step_301_query_by_local_secondary_index();
+        test.step_310_raced_multimap();
     }
 
     void step_001_create_client() {
@@ -128,7 +132,7 @@ public class IntegrationTest {
     }
 
     void step_111_cache_item_tests() {
-        var cache = em.putCacheResource("a", new byte[]{1, 2, 3}, null, Map.of("a", "x", "b", "y"), Instant.now(), false);
+        var cache = em.putCacheResource("a", new byte[]{1, 2, 3}, null, Map.of("a", "x", "b", "y"), null, Instant.now(), false);
         cache = em.findCacheResource("a").get();
         assertArrayEquals(new byte[]{1, 2, 3}, cache.data());
         assertEquals(Map.of("b", "y", "a", "x"), cache.properties());
@@ -206,12 +210,12 @@ public class IntegrationTest {
 
     void step_300_query_by_global_secondary_index() {
         assertEquals(0, em.scanAllCacheResource().count());
-        em.putCacheResource("key", new byte[]{1, 2, 3}, "uniq1", Map.of(), Instant.now(), true);
+        em.putCacheResource("key", new byte[]{1, 2, 3}, "uniq1", Map.of(), Map.of(), Instant.now(), true);
         assertEquals(1, em.queryCacheResourceByUniqueId("uniq1").execute().count());
         CacheResource resource = em.queryCacheResourceByUniqueId("uniq1").execute().findFirst().get();
         assertArrayEquals(new byte[]{1, 2, 3}, resource.data());
-        em.putCacheResource("key2", new byte[]{4, 5, 6}, "uniq1", Map.of(), Instant.now(), true);
-        em.putCacheResource("key3", new byte[]{7, 8, 9}, "uniq2", Map.of(), null, true);
+        em.putCacheResource("key2", new byte[]{4, 5, 6}, "uniq1", Map.of(), Map.of(), Instant.now(), true);
+        em.putCacheResource("key3", new byte[]{7, 8, 9}, "uniq2", Map.of(), Map.of(), null, true);
         assertEquals(2, em.queryCacheResourceByUniqueId("uniq1").execute().count());
         assertThrows(DynamoDbException.class, () -> em.queryCacheResourceByUniqueId("uniq1").uniqueId().ne("uniq1").execute());
         assertArrayEquals(new byte[]{7, 8, 9}, em.queryCacheResourceByKey("key3").uniqueId().ne("x").execute().findFirst().get().data());
@@ -229,6 +233,35 @@ public class IntegrationTest {
 
         assertEquals(3, em.queryGameScoreByGameGenre("user2").execute().count());
         assertEquals(1, em.queryGameScoreByGameGenre("user2").gameGenre().beginsWith("adv").execute().count());
+    }
+
+    void step_310_raced_multimap() {
+        int threadCount = 16;
+        Phaser phaser = new Phaser(threadCount + 1);
+        for (int i = 0; i < threadCount; i++) {
+            final String threadId = "thread" + i;
+            new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    phaser.arriveAndAwaitAdvance(); // Before put main item
+                    CacheResource resource = em.putCacheResource(CacheResource.builder().key("xxxyyy").extendedProperties(Map.of()).build(), true);
+                    phaser.arriveAndAwaitAdvance(); // Before race
+                    resource.mutator().extendedProperties().add("t", threadId).commit();
+                    phaser.arriveAndAwaitAdvance(); // After race
+                }
+            }).start();
+        }
+        Map<String, List<String>> extended = new HashMap<>();
+        extended.put("a", List.of("1", "2", "3"));
+        extended.put("b", List.of("4", "5"));
+        em.putCacheResource(CacheResource.builder().key("aaabbb").extendedProperties(extended).build(), false);
+        assertEquals(List.of("4", "5", "7"), em.findCacheResource("aaabbb").get().mutator().extendedProperties().add("b", "7").commit().extendedProperties().get("b"));
+        phaser.arriveAndAwaitAdvance(); // Before put main item
+        phaser.arriveAndAwaitAdvance(); // Before race
+        phaser.arriveAndAwaitAdvance(); // After race
+        assertEquals(threadCount, em.findCacheResource("xxxyyy").get().extendedProperties().get("t").size());// After race
+        List<String> list = em.findCacheResource("xxxyyy").get().extendedProperties().get("t");
+        IntStream.range(0, threadCount).forEach(i -> assertTrue(list.contains("thread" + i), "" + i + " => " + list));
     }
 
 }

@@ -120,7 +120,7 @@ public class GameScore implements Comparable<GameScore> {
                 updateItemRequestBuilder.expressionAttributeValues(expressionAttributeValues);
             }
             if (!conditionExpressions.isEmpty()) {
-                updateItemRequestBuilder.conditionExpression(String.join(",", conditionExpressions));
+                updateItemRequestBuilder.conditionExpression(String.join(" AND ", conditionExpressions));
             }
             UpdateItemResponse response = client.updateItem(updateItemRequestBuilder.build());
             Map<String, AttributeValue> map = response.attributes();

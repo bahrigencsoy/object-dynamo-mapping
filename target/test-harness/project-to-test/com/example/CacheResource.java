@@ -14,6 +14,7 @@ public class CacheResource implements Comparable<CacheResource> {
     private final byte[] data;
     private final String uniqueId;
     private final Map<String, String> properties;
+    private final Map<String, List<String>> extendedProperties;
     private final java.time.Instant creationTime;
 
     private transient DynamoDbClient _client;
@@ -24,6 +25,7 @@ public class CacheResource implements Comparable<CacheResource> {
         this.data = b.data;
         this.uniqueId = b.uniqueId;
         this.properties = b.properties;
+        this.extendedProperties = b.extendedProperties;
         this.creationTime = b.creationTime;
     }
 
@@ -41,6 +43,10 @@ public class CacheResource implements Comparable<CacheResource> {
 
     public Map<String, String> properties() {
         return properties;
+    }
+
+    public Map<String, List<String>> extendedProperties() {
+        return extendedProperties;
     }
 
     public java.time.Instant creationTime() {
@@ -95,6 +101,12 @@ public class CacheResource implements Comparable<CacheResource> {
             mutators.add(mutator);
             return mutator;
         }
+        public StringMultimapMutator<Mutator> extendedProperties() {
+            var mutator = new StringMultimapMutator<Mutator>("cache_data_extended_props", this,
+                    _cache_data_extended_props__helper);
+            mutators.add(mutator);
+            return mutator;
+        }
         public GenericMutator<java.time.Instant, Mutator> creationTime() {
             var mutator = new GenericMutator<java.time.Instant, Mutator>("creation_time", this, _creation_time__helper);
             mutators.add(mutator);
@@ -130,7 +142,7 @@ public class CacheResource implements Comparable<CacheResource> {
                 updateItemRequestBuilder.expressionAttributeValues(expressionAttributeValues);
             }
             if (!conditionExpressions.isEmpty()) {
-                updateItemRequestBuilder.conditionExpression(String.join(",", conditionExpressions));
+                updateItemRequestBuilder.conditionExpression(String.join(" AND ", conditionExpressions));
             }
             UpdateItemResponse response = client.updateItem(updateItemRequestBuilder.build());
             Map<String, AttributeValue> map = response.attributes();
@@ -147,6 +159,9 @@ public class CacheResource implements Comparable<CacheResource> {
             }
             if (map.containsKey("cache_data_props")) {
                 builder.properties(CacheResource._cache_data_props__helper.extractFromMap(map));
+            }
+            if (map.containsKey("cache_data_extended_props")) {
+                builder.extendedProperties(CacheResource._cache_data_extended_props__helper.extractFromMap(map));
             }
             if (map.containsKey("creation_time")) {
                 builder.creationTime(CacheResource._creation_time__helper.extractFromMap(map));
@@ -173,12 +188,13 @@ public class CacheResource implements Comparable<CacheResource> {
         CacheResource other = (CacheResource) o;
         return Objects.equals(key, other.key) && Objects.equals(data, other.data)
                 && Objects.equals(uniqueId, other.uniqueId) && Objects.equals(properties, other.properties)
+                && Objects.equals(extendedProperties, other.extendedProperties)
                 && Objects.equals(creationTime, other.creationTime);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(key, data, uniqueId, properties, creationTime);
+        return Objects.hash(key, data, uniqueId, properties, extendedProperties, creationTime);
     }
 
     @Override
@@ -215,6 +231,7 @@ public class CacheResource implements Comparable<CacheResource> {
         sb.append(", data='").append(data).append('\'');
         sb.append(", uniqueId='").append(uniqueId).append('\'');
         sb.append(", properties='").append(properties).append('\'');
+        sb.append(", extendedProperties='").append(extendedProperties).append('\'');
         sb.append(", creationTime='").append(creationTime).append('\'');
 
         sb.append('}');
@@ -227,6 +244,8 @@ public class CacheResource implements Comparable<CacheResource> {
             "cached_item_unique_id");
     static final lib.AttributeHelper<Map<String, String>> _cache_data_props__helper = new lib.StringMapHelper(
             "cache_data_props");
+    static final lib.AttributeHelper<Map<String, List<String>>> _cache_data_extended_props__helper = new lib.StringMultimapHelper(
+            "cache_data_extended_props");
     static final lib.AttributeHelper<java.time.Instant> _creation_time__helper = new lib.InstantAttributeHelper(
             "creation_time");
 
@@ -240,6 +259,7 @@ public class CacheResource implements Comparable<CacheResource> {
         private byte[] data;
         private String uniqueId;
         private Map<String, String> properties;
+        private Map<String, List<String>> extendedProperties;
         private java.time.Instant creationTime;
 
         private Builder() {
@@ -259,6 +279,10 @@ public class CacheResource implements Comparable<CacheResource> {
         }
         public Builder properties(Map<String, String> properties) {
             this.properties = properties;
+            return this;
+        }
+        public Builder extendedProperties(Map<String, List<String>> extendedProperties) {
+            this.extendedProperties = extendedProperties;
             return this;
         }
         public Builder creationTime(java.time.Instant creationTime) {

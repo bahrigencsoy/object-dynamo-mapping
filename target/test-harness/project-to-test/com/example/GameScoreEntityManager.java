@@ -323,6 +323,9 @@ public class GameScoreEntityManager {
         if (map.containsKey("cache_data_props")) {
             builder.properties(CacheResource._cache_data_props__helper.extractFromMap(map));
         }
+        if (map.containsKey("cache_data_extended_props")) {
+            builder.extendedProperties(CacheResource._cache_data_extended_props__helper.extractFromMap(map));
+        }
         if (map.containsKey("creation_time")) {
             builder.creationTime(CacheResource._creation_time__helper.extractFromMap(map));
         }
@@ -335,7 +338,7 @@ public class GameScoreEntityManager {
       * Atomically puts an item or overwrite it.
       */
     public CacheResource putCacheResource(String key, byte[] data, String uniqueId, Map<String, String> properties,
-            java.time.Instant creationTime, boolean atomic) {
+            Map<String, List<String>> extendedProperties, java.time.Instant creationTime, boolean atomic) {
         if (key == null) {
             throw new NullPointerException("Partition key \"cache_item_key\" is null");
         }
@@ -354,6 +357,9 @@ public class GameScoreEntityManager {
         }
         if (properties != null) {
             CacheResource._cache_data_props__helper.contributeToMap(map, properties);
+        }
+        if (extendedProperties != null) {
+            CacheResource._cache_data_extended_props__helper.contributeToMap(map, extendedProperties);
         }
         if (creationTime != null) {
             CacheResource._creation_time__helper.contributeToMap(map, creationTime);
@@ -391,7 +397,8 @@ public class GameScoreEntityManager {
     public CacheResource putCacheResource(CacheResource object, boolean atomic) {
         return putCacheResource(
 
-                object.key(), object.data(), object.uniqueId(), object.properties(), object.creationTime(),
+                object.key(), object.data(), object.uniqueId(), object.properties(), object.extendedProperties(),
+                object.creationTime(),
 
                 atomic);
     }
@@ -451,6 +458,11 @@ public class GameScoreEntityManager {
             return new lib.GenericQuery<>("cache_data_props", this, CacheResource._cache_data_props__helper,
                     selectMapForAttribute("cache_data_props"));
         }
+        public lib.GenericQuery<Map<String, List<String>>, CacheResourceQuery> extendedProperties() {
+            return new lib.GenericQuery<>("cache_data_extended_props", this,
+                    CacheResource._cache_data_extended_props__helper,
+                    selectMapForAttribute("cache_data_extended_props"));
+        }
         public lib.GenericQuery<java.time.Instant, CacheResourceQuery> creationTime() {
             return new lib.GenericQuery<>("creation_time", this, CacheResource._creation_time__helper,
                     selectMapForAttribute("creation_time"));
@@ -482,6 +494,7 @@ public class GameScoreEntityManager {
                     case "cached_data" -> queryFilter;
                     case "cached_item_unique_id" -> queryFilter;
                     case "cache_data_props" -> queryFilter;
+                    case "cache_data_extended_props" -> queryFilter;
                     case "creation_time" -> queryFilter;
 
                     default -> throw new IllegalArgumentException("Unknown attribute '" + attribute + "'");
@@ -506,6 +519,7 @@ public class GameScoreEntityManager {
                     case "cache_item_key" -> queryFilter;
                     case "cached_data" -> queryFilter;
                     case "cache_data_props" -> queryFilter;
+                    case "cache_data_extended_props" -> queryFilter;
                     case "creation_time" -> queryFilter;
 
                     default -> throw new IllegalArgumentException("Unknown attribute '" + attribute + "'");

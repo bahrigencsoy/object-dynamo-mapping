@@ -149,6 +149,41 @@ class lib {
         }
     }
 
+    static class StringMultimapHelper extends BaseAttributeHelper<Map<String, List<String>>> {
+
+        StringMultimapHelper(String attributeName) {
+            super(attributeName);
+        }
+
+        @Override
+        public AttributeValue.Builder build(AttributeValue.Builder builder, Map<String, List<String>> value) {
+            Map<String, AttributeValue> dynamoMap = new TreeMap<>();
+            for (Map.Entry<String, List<String>> e : value.entrySet()) {
+                List<AttributeValue> values = new ArrayList<>();
+                for (String val : e.getValue()) {
+                    values.add(AttributeValue.builder().s(val).build());
+                }
+                dynamoMap.put(e.getKey(), AttributeValue.builder().l(values).build());
+            }
+            return builder.m(dynamoMap);
+        }
+
+        @Override
+        public Map<String, List<String>> extract(AttributeValue value) {
+            Map<String, List<String>> returnMap = new HashMap<>();
+            if (value.hasM()) {
+                for (Map.Entry<String, AttributeValue> e : value.m().entrySet()) {
+                    if (e.getValue().hasL()) {
+                        returnMap.put(e.getKey(), e.getValue().l().stream().map(AttributeValue::s).toList());
+                    } else {
+                        returnMap.put(e.getKey(), List.of());
+                    }
+                }
+            }
+            return Collections.unmodifiableMap(returnMap);
+        }
+    }
+
      static class InstantAttributeHelper extends BaseAttributeHelper<java.time.Instant> {
          public InstantAttributeHelper(String attributeName) {
              super(attributeName);
@@ -260,6 +295,40 @@ class lib {
                 expressionAttributeNames.put("#mm" + myCounter, attribute);
                 expressionAttributeNames.put("#mk" + itemCounter, entry.getKey());
                 expressionAttributeValues.put(":mmv" + itemCounter, AttributeValue.builder().s(entry.getValue()).build());
+            }
+        }
+    }
+
+    public static class StringMultimapMutator<P> extends GenericMutator<Map<String, List<String>>, P> {
+
+        private final List<Map.Entry<String, String>> puts = new ArrayList<>();
+
+        StringMultimapMutator(String attribute, P parent, AttributeHelper<Map<String, List<String>>> helper) {
+            super(attribute, parent, helper);
+        }
+
+        public P add(String key, String value) {
+            puts.add(Map.entry(key, value));
+            return parent;
+        }
+
+        @Override
+        void appendUpdateExpression(AtomicInteger counter, List<String> setExpressions, List<String> removeExpressions,
+                                    List<String> conditionExpressions, Map<String, String> expressionAttributeNames,
+                                    Map<String, AttributeValue> expressionAttributeValues) {
+            super.appendUpdateExpression(counter, setExpressions, removeExpressions, conditionExpressions,
+                    expressionAttributeNames, expressionAttributeValues);
+
+            for (Map.Entry<String, String> entry : puts) {
+                int myCounter = counter.incrementAndGet();
+                int itemCounter = counter.incrementAndGet();
+                int emptyCounter = counter.incrementAndGet();
+
+                setExpressions.add(String.format("#smm%d.#smmk%d = list_append(if_not_exists(#smm%d.#smmk%d, :smme%d), :ssmv%d)", myCounter, itemCounter, myCounter, itemCounter, emptyCounter, itemCounter));
+                expressionAttributeNames.put("#smm" + myCounter, attribute);
+                expressionAttributeNames.put("#smmk" + itemCounter, entry.getKey());
+                expressionAttributeValues.put(":ssmv" + itemCounter, AttributeValue.builder().l(AttributeValue.builder().s(entry.getValue()).build()).build());
+                expressionAttributeValues.put(":smme" + emptyCounter, AttributeValue.builder().l(List.of()).build());
             }
         }
     }
