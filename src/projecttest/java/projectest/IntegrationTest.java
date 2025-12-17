@@ -246,7 +246,7 @@ public class IntegrationTest {
                     phaser.arriveAndAwaitAdvance(); // Before put main item
                     CacheResource resource = em.putCacheResource(CacheResource.builder().key("xxxyyy").extendedProperties(Map.of()).build(), true);
                     phaser.arriveAndAwaitAdvance(); // Before race
-                    resource.mutator().extendedProperties().add("t", threadId).commit();
+                    em.mutatorCacheResource("xxxyyy").extendedProperties().add("t", threadId).commit();
                     phaser.arriveAndAwaitAdvance(); // After race
                 }
             }).start();

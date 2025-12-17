@@ -116,6 +116,14 @@ public class [(${project.factoryClass})] {
         return Optional.of(obj);
      }
 
+    public [(${table.javaClass})].Mutator mutator[(${table.javaClass})]([# th:insert="~{key-attributes-types}"][/]) {
+        var obj = [(${table.javaClass})].builder()[# th:each="attribute : ${table.keyAttributes}"].[(${attribute.attribute})]([(${attribute.attribute})])[/]
+                .build();
+        obj._setClient(client);
+        obj._setTableName([(${table.tableVar})]);
+        return obj.mutator();
+    }
+
      public abstract class [(${table.javaClass})]Query {
         private final QueryRequest.Builder builder;
         protected final Map<String, Condition> keyConditions;

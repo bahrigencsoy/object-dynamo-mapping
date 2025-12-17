@@ -307,14 +307,20 @@ class lib {
 
     public static class StringMultimapMutator<P> extends GenericMutator<Map<String, List<String>>, P> {
 
-        private final List<Map.Entry<String, String>> puts = new ArrayList<>();
+        private final List<Map.Entry<String, String>> adds = new ArrayList<>();
+        private final Map<String, List<String>> puts = new LinkedHashMap<>();
 
         StringMultimapMutator(String attribute, P parent, AttributeHelper<Map<String, List<String>>> helper) {
             super(attribute, parent, helper);
         }
 
         public P add(String key, String value) {
-            puts.add(Map.entry(key, value));
+            adds.add(Map.entry(key, value));
+            return parent;
+        }
+
+        public P put(String key, List<String> values) {
+            puts.put(key, values);
             return parent;
         }
 
@@ -325,7 +331,7 @@ class lib {
             super.appendUpdateExpression(counter, setExpressions, removeExpressions, conditionExpressions,
                     expressionAttributeNames, expressionAttributeValues);
 
-            for (Map.Entry<String, String> entry : puts) {
+            for (Map.Entry<String, String> entry : adds) {
                 int myCounter = counter.incrementAndGet();
                 int itemCounter = counter.incrementAndGet();
                 int emptyCounter = counter.incrementAndGet();
@@ -338,6 +344,17 @@ class lib {
                 expressionAttributeValues.put(":ssmv" + itemCounter,
                         AttributeValue.builder().l(AttributeValue.builder().s(entry.getValue()).build()).build());
                 expressionAttributeValues.put(":smme" + emptyCounter, AttributeValue.builder().l(List.of()).build());
+            }
+
+            for (Map.Entry<String, List<String>> entry : puts.entrySet()) {
+                int myCounter = counter.incrementAndGet();
+                int itemCounter = counter.incrementAndGet();
+                setExpressions.add(String.format("#smm%d.#smmk%d = :ssmv%d", myCounter, itemCounter, itemCounter));
+                expressionAttributeNames.put("#smm" + myCounter, attribute);
+                expressionAttributeNames.put("#smmk" + itemCounter, entry.getKey());
+                List<AttributeValue> listValue = new ArrayList<>();
+                entry.getValue().stream().forEach(s -> listValue.add(AttributeValue.builder().s(s).build()));
+                expressionAttributeValues.put(":ssmv" + itemCounter, AttributeValue.builder().l(listValue).build());
             }
         }
     }

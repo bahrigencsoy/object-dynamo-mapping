@@ -134,6 +134,13 @@ public class GameScoreEntityManager {
         return Optional.of(obj);
     }
 
+    public GameScore.Mutator mutatorGameScore(String userId, String gameTitle) {
+        var obj = GameScore.builder().userId(userId).gameTitle(gameTitle).build();
+        obj._setClient(client);
+        obj._setTableName(table_GameScore);
+        return obj.mutator();
+    }
+
     public abstract class GameScoreQuery {
         private final QueryRequest.Builder builder;
         protected final Map<String, Condition> keyConditions;
@@ -419,6 +426,13 @@ public class GameScoreEntityManager {
         obj._setClient(client);
         obj._setTableName(table_CacheResource);
         return Optional.of(obj);
+    }
+
+    public CacheResource.Mutator mutatorCacheResource(String key) {
+        var obj = CacheResource.builder().key(key).build();
+        obj._setClient(client);
+        obj._setTableName(table_CacheResource);
+        return obj.mutator();
     }
 
     public abstract class CacheResourceQuery {
