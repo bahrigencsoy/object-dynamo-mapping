@@ -122,6 +122,17 @@
     </dependencies>
 
     <build>
+        <testResources>
+            <testResource>
+                <directory>src/test/resources</directory>
+                <excludes>
+                    <exclude>aws-infra/.terraform/**</exclude>
+                    <exclude>.terraform.lock.hcl</exclude>
+                    <exclude>terraform.tfstate</exclude>
+                    <exclude>terraform.tfstate.backup</exclude>
+                </excludes>
+            </testResource>
+        </testResources>
         <pluginManagement><!-- lock down plugins versions to avoid using Maven defaults (may be moved to parent pom) -->
             <plugins>
                 <plugin>

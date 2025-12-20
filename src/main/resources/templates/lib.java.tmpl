@@ -379,6 +379,14 @@ class lib {
             return singleValueComparison(ComparisonOperator.NE, value);
         }
 
+        public P lt(T value) {
+            return singleValueComparison(ComparisonOperator.LT, value);
+        }
+
+        public P gt(T value) {
+            return singleValueComparison(ComparisonOperator.GT, value);
+        }
+
         public P isNull() {
             conditionMap.put(attribute, Condition.builder().comparisonOperator(ComparisonOperator.NULL).build());
             return parent;
