@@ -315,6 +315,19 @@ public class GameScoreEntityManager {
         };
     }
 
+    public void serializeGameScore(java.io.ObjectOutputStream oos, java.util.stream.Stream<GameScore> stream)
+            throws java.io.IOException {
+        lib.writeStream(oos, stream, GameScore.class);
+    }
+
+    public java.util.stream.Stream<GameScore> deserializeGameScore(java.io.ObjectInputStream ois)
+            throws java.io.IOException {
+        return lib.readStream(ois, GameScore.class).peek(obj -> {
+            obj._setTableName(table_GameScore);
+            obj._setClient(client);
+        });
+    }
+
     private static CacheResource __constructCacheResource(Map<String, AttributeValue> map) {
         CacheResource.Builder builder = CacheResource.builder();
 
@@ -620,6 +633,19 @@ public class GameScoreEntityManager {
                 return obj;
             }
         };
+    }
+
+    public void serializeCacheResource(java.io.ObjectOutputStream oos, java.util.stream.Stream<CacheResource> stream)
+            throws java.io.IOException {
+        lib.writeStream(oos, stream, CacheResource.class);
+    }
+
+    public java.util.stream.Stream<CacheResource> deserializeCacheResource(java.io.ObjectInputStream ois)
+            throws java.io.IOException {
+        return lib.readStream(ois, CacheResource.class).peek(obj -> {
+            obj._setTableName(table_CacheResource);
+            obj._setClient(client);
+        });
     }
 
 }

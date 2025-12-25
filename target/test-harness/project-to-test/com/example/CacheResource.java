@@ -8,7 +8,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import static com.example.lib.*;
 
-public class CacheResource implements Comparable<CacheResource> {
+public class CacheResource implements Comparable<CacheResource>, java.io.Serializable {
+    private static final long serialVersionUID = -4607284148900335639L;
 
     private final String key;
     private final byte[] data;

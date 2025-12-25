@@ -132,4 +132,14 @@ public class ExtendedDynamoTable extends DynamoTable {
     public String getTableVar() {
         return "table_" + getJavaClass();
     }
+
+    public long getSerialUID() {
+        long id[] = new long[]{0xC0FFEEAA0103B9CDL};
+        getAttributes().forEach(att -> {
+            id[0] <<= 1;
+            id[0] ^= att.getName().hashCode();
+            id[0] ^= ((long) att.getJavaType().hashCode()) << 16;
+        });
+        return id[0];
+    }
 }

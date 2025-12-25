@@ -263,6 +263,17 @@ public [(${table.javaClass})]Query query[(${table.javaClass})]By[(${#strings.cap
         };
     }
 
+    public void serialize[(${table.javaClass})](java.io.ObjectOutputStream oos, java.util.stream.Stream<[(${table.javaClass})]> stream) throws java.io.IOException {
+        lib.writeStream(oos, stream, [(${table.javaClass})].class);
+    }
+
+    public java.util.stream.Stream<[(${table.javaClass})]> deserialize[(${table.javaClass})](java.io.ObjectInputStream ois) throws java.io.IOException {
+        return lib.readStream(ois, [(${table.javaClass})].class).peek(obj -> {
+            obj._setTableName([(${table.tableVar})]);
+            obj._setClient(client);
+        });
+    }
+
 [/]
 
 

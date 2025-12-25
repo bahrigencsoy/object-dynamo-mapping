@@ -8,7 +8,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import static com.example.lib.*;
 
-public class GameScore implements Comparable<GameScore> {
+public class GameScore implements Comparable<GameScore>, java.io.Serializable {
+    private static final long serialVersionUID = 1152046297723547583L;
 
     private final String userId;
     private final String gameTitle;

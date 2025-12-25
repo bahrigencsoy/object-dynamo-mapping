@@ -405,4 +405,84 @@ class lib {
     abstract static class FieldMutator {
         abstract void appendUpdateExpression(AtomicInteger counter, List<String> setExpressions, List<String> removeExpressions, List<String> conditionExpression, Map<String, String> expressionAttributeNames, Map<String, AttributeValue> expressionAttributeValues);
     }
+
+    /**
+     * Consumes the input Stream and writes it to the ObjectOutputStream in chunks.
+     * Protocol: [UTF ClassName] -> ([Int Size] [Obj...])* -> [Int -1]
+     */
+    static <T> void writeStream(java.io.ObjectOutputStream out, java.util.stream.Stream<T> inputStream, Class<T> type) throws java.io.IOException {
+        out.writeUTF(type.getName());
+
+        List<T> buffer = new ArrayList<>(50);
+
+        inputStream.forEach(item -> {
+            buffer.add(item);
+
+            if (buffer.size() >= 50) {
+                try {
+                    writeChunk(out, buffer);
+                } catch (java.io.IOException e) {
+                    throw new java.io.UncheckedIOException(e);
+                }
+            }
+        });
+
+        if (!buffer.isEmpty()) {
+            writeChunk(out, buffer);
+        }
+
+        out.writeInt(-1);
+    }
+
+    private static <T> void writeChunk(java.io.ObjectOutputStream out, List<T> buffer) throws java.io.IOException {
+        out.writeInt(buffer.size());
+        for (T item : buffer) {
+            out.writeObject(item);
+        }
+        buffer.clear();
+    }
+
+    static <T> java.util.stream.Stream<T> readStream(java.io.ObjectInputStream in, Class<T> expectedType) throws java.io.IOException {
+
+        String className = in.readUTF();
+        if (!className.equals(expectedType.getName())) {
+            throw new java.io.IOException("Type Mismatch! Expected: " + expectedType.getName() + ", Found: " + className);
+        }
+
+        Spliterator<T> spliterator = new Spliterators.AbstractSpliterator<T>(Long.MAX_VALUE, Spliterator.ORDERED | Spliterator.NONNULL) {
+
+            int itemsRemainingInChunk = 0;
+            boolean sectionFinished = false;
+
+            @Override
+            public boolean tryAdvance(java.util.function.Consumer<? super T> action) {
+                if (sectionFinished) {
+                    return false;
+                }
+
+                try {
+                    if (itemsRemainingInChunk == 0) {
+                        int nextChunkSize = in.readInt();
+
+                        if (nextChunkSize == -1) {
+                            sectionFinished = true;
+                            return false; // End of this section
+                        }
+
+                        itemsRemainingInChunk = nextChunkSize;
+                    }
+
+                    Object obj = in.readObject();
+                    action.accept(expectedType.cast(obj));
+                    itemsRemainingInChunk--;
+                    return true;
+
+                } catch (java.io.IOException | ClassNotFoundException e) {
+                    throw new RuntimeException("Error reading chunked stream", e);
+                }
+            }
+        };
+
+        return java.util.stream.StreamSupport.stream(spliterator, false);
+    }
 }
