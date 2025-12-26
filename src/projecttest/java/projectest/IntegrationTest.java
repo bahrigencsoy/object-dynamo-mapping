@@ -9,6 +9,7 @@ import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
 import software.amazon.awssdk.services.dynamodb.model.ConditionalCheckFailedException;
 import software.amazon.awssdk.services.dynamodb.model.DynamoDbException;
 
+import java.io.*;
 import java.time.Instant;
 import java.util.HashMap;
 import java.util.List;
@@ -17,6 +18,7 @@ import java.util.Random;
 import java.util.concurrent.Phaser;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.IntStream;
+import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -46,6 +48,7 @@ public class IntegrationTest {
         test.step_300_query_by_global_secondary_index();
         test.step_301_query_by_local_secondary_index();
         test.step_310_raced_multimap();
+        test.step_400_serialization();
     }
 
     void step_001_create_client() {
@@ -133,7 +136,7 @@ public class IntegrationTest {
     }
 
     void step_111_cache_item_tests() {
-        var cache = em.putCacheResource("a", new byte[]{1, 2, 3}, null, Map.of("a", "x", "b", "y"), null, Instant.now(), null ,false);
+        var cache = em.putCacheResource("a", new byte[]{1, 2, 3}, null, Map.of("a", "x", "b", "y"), null, Instant.now(), null, false);
         cache = em.findCacheResource("a").get();
         assertArrayEquals(new byte[]{1, 2, 3}, cache.data());
         assertEquals(Map.of("b", "y", "a", "x"), cache.properties());
@@ -153,7 +156,7 @@ public class IntegrationTest {
     }
 
     void step_112_list_test() {
-        var cache = em.putCacheResource("list", new byte[]{1, 2, 3}, null, Map.of("a", "x", "b", "y"), null, Instant.now(), null ,false);
+        var cache = em.putCacheResource("list", new byte[]{1, 2, 3}, null, Map.of("a", "x", "b", "y"), null, Instant.now(), null, false);
         cache = em.findCacheResource("list").get();
         assertNull(cache.relations());
         cache.mutator().relations().add("ooo").commit();
@@ -222,11 +225,11 @@ public class IntegrationTest {
 
     void step_300_query_by_global_secondary_index() {
         assertEquals(0, em.scanAllCacheResource().count());
-        em.putCacheResource("key", new byte[]{1, 2, 3}, "uniq1", Map.of(), Map.of(), Instant.now(), null ,true);
+        em.putCacheResource("key", new byte[]{1, 2, 3}, "uniq1", Map.of(), Map.of(), Instant.now(), null, true);
         assertEquals(1, em.queryCacheResourceByUniqueId("uniq1").execute().count());
         CacheResource resource = em.queryCacheResourceByUniqueId("uniq1").execute().findFirst().get();
         assertArrayEquals(new byte[]{1, 2, 3}, resource.data());
-        em.putCacheResource("key2", new byte[]{4, 5, 6}, "uniq1", Map.of(), Map.of(), Instant.now(), null ,true);
+        em.putCacheResource("key2", new byte[]{4, 5, 6}, "uniq1", Map.of(), Map.of(), Instant.now(), null, true);
         em.putCacheResource("key3", new byte[]{7, 8, 9}, "uniq2", Map.of(), Map.of(), null, List.of(), true);
         assertEquals(2, em.queryCacheResourceByUniqueId("uniq1").execute().count());
         assertThrows(DynamoDbException.class, () -> em.queryCacheResourceByUniqueId("uniq1").uniqueId().ne("uniq1").execute());
@@ -274,6 +277,31 @@ public class IntegrationTest {
         assertEquals(threadCount, em.findCacheResource("xxxyyy").get().extendedProperties().get("t").size());// After race
         List<String> list = em.findCacheResource("xxxyyy").get().extendedProperties().get("t");
         IntStream.range(0, threadCount).forEach(i -> assertTrue(list.contains("thread" + i), "" + i + " => " + list));
+    }
+
+    void step_400_serialization() {
+        try (ObjectInputStream ois = new ObjectInputStream(getClass().getResourceAsStream("/test-serialize.bin"))) {
+            List<CacheResource> caches = em.deserializeCacheResource(ois).toList();
+            List<GameScore> scores = em.deserializeGameScore(ois).toList();
+            assertEquals(2, caches.size());
+            assertEquals(2, scores.size());
+            assertEquals("serial2", caches.get(1).uniqueId());
+            assertEquals("serial4", scores.get(1).userId());
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+        try (ByteArrayOutputStream bos = new ByteArrayOutputStream(); ObjectOutputStream oos = new ObjectOutputStream(bos)) {
+            GameScore gs = GameScore.builder().gameTitle("a").totalScore(100).userId("u").build();
+            em.serializeGameScore(oos, Stream.generate(() -> gs).limit(1000));
+            em.serializeCacheResource(oos, List.<CacheResource>of().stream());
+            oos.flush();
+            oos.close();
+            ObjectInputStream ois = new ObjectInputStream(new ByteArrayInputStream(bos.toByteArray()));
+            assertEquals(1000, em.deserializeGameScore(ois).count());
+            assertEquals(0, em.deserializeCacheResource(ois).count());
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 
 }

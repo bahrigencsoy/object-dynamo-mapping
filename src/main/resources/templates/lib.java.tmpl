@@ -548,6 +548,7 @@ class lib {
 
 [# th:each="table : ${project.tables}"]
     static class _[(${table.javaClass})]_Proxy implements java.io.Serializable {
+        @java.io.Serial
         private static final long serialVersionUID = 1L;
 
 [# th:each="attribute : ${table.attributes}"]
@@ -559,6 +560,7 @@ class lib {
             this.[(${attribute.attribute})] = obj.[(${attribute.attribute})]();[/]
         }
 
+        @java.io.Serial
         private Object readResolve() {
             return [(${table.javaClass})].builder()[# th:each="attribute : ${table.attributes}"]
                     .[(${attribute.attribute})]([(${attribute.attribute})])

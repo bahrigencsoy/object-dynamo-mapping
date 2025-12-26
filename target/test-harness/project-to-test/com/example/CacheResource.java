@@ -9,6 +9,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import static com.example.lib.*;
 
 public class CacheResource implements Comparable<CacheResource>, java.io.Serializable {
+    @java.io.Serial
     private static final long serialVersionUID = 9214598570906432776L;
 
     private final String key;
@@ -70,7 +71,8 @@ public class CacheResource implements Comparable<CacheResource>, java.io.Seriali
 
     public Mutator mutator() {
         var map = new HashMap<String, AttributeValue>();
-        CacheResource._cache_item_key__helper.contributeToMap(map, key);;
+        CacheResource._cache_item_key__helper.contributeToMap(map, key);
+
         return new Mutator(_client, map, _tableName);
     }
 
@@ -254,10 +256,12 @@ public class CacheResource implements Comparable<CacheResource>, java.io.Seriali
         return sb.toString();
     }
 
+    @java.io.Serial
     private Object writeReplace() {
         return new lib._CacheResource_Proxy(this);
     }
 
+    @java.io.Serial
     private void readObject(java.io.ObjectInputStream stream) throws java.io.InvalidObjectException {
         throw new java.io.InvalidObjectException("Serialization of CacheResource requires proxy object");
     }

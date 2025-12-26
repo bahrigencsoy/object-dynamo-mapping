@@ -9,6 +9,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import static [(${project.packageName})].lib.*;
 
 public class [(${table.javaClass})] implements Comparable<[(${table.javaClass})]>, java.io.Serializable {
+    @java.io.Serial
     private static final long serialVersionUID = [(${table.serialUID})]L;
 [# th:each="attribute : ${table.attributes}"]
     private final [(${attribute.javaType})] [(${attribute.attribute})];
@@ -37,7 +38,7 @@ public class [(${table.javaClass})] implements Comparable<[(${table.javaClass})]
 
     public Mutator mutator() {
         var map = new HashMap<String, AttributeValue>();
-        [# th:insert="~{key}"][/];
+        [# th:insert="~{key}"/]
         return new Mutator(_client, map, _tableName);
     }
 
@@ -148,10 +149,12 @@ public class [(${table.javaClass})] implements Comparable<[(${table.javaClass})]
         return sb.toString();
     }
 
+    @java.io.Serial
     private Object writeReplace() {
         return new lib._[(${table.javaClass})]_Proxy(this);
     }
 
+    @java.io.Serial
     private void readObject(java.io.ObjectInputStream stream) throws java.io.InvalidObjectException {
         throw new java.io.InvalidObjectException("Serialization of [(${table.javaClass})] requires proxy object");
     }

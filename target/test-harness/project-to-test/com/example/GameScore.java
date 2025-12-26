@@ -9,6 +9,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import static com.example.lib.*;
 
 public class GameScore implements Comparable<GameScore>, java.io.Serializable {
+    @java.io.Serial
     private static final long serialVersionUID = 1152046297723547583L;
 
     private final String userId;
@@ -54,7 +55,8 @@ public class GameScore implements Comparable<GameScore>, java.io.Serializable {
         var map = new HashMap<String, AttributeValue>();
         GameScore._user_id__helper.contributeToMap(map, userId);
 
-        GameScore._game_title__helper.contributeToMap(map, gameTitle);;
+        GameScore._game_title__helper.contributeToMap(map, gameTitle);
+
         return new Mutator(_client, map, _tableName);
     }
 
@@ -216,10 +218,12 @@ public class GameScore implements Comparable<GameScore>, java.io.Serializable {
         return sb.toString();
     }
 
+    @java.io.Serial
     private Object writeReplace() {
         return new lib._GameScore_Proxy(this);
     }
 
+    @java.io.Serial
     private void readObject(java.io.ObjectInputStream stream) throws java.io.InvalidObjectException {
         throw new java.io.InvalidObjectException("Serialization of GameScore requires proxy object");
     }
