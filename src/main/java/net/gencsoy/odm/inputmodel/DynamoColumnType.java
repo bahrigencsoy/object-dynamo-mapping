@@ -7,5 +7,6 @@ public enum DynamoColumnType {
     BOOLEAN,
     X_STRINGMAP,
     X_INSTANT,
-    X_STRINGMULTIMAP
+    X_STRINGMULTIMAP,
+    X_STRINGLIST
 }

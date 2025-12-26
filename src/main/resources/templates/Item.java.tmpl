@@ -148,6 +148,14 @@ public class [(${table.javaClass})] implements Comparable<[(${table.javaClass})]
         return sb.toString();
     }
 
+    private Object writeReplace() {
+        return new lib._[(${table.javaClass})]_Proxy(this);
+    }
+
+    private void readObject(java.io.ObjectInputStream stream) throws java.io.InvalidObjectException {
+        throw new java.io.InvalidObjectException("Serialization of [(${table.javaClass})] requires proxy object");
+    }
+
 
 [# th:each="attribute : ${table.attributes}"]
     static final lib.AttributeHelper<[(${attribute.javaType})]> [(${attribute.helper})] = new lib.[(${attribute.helperClass})]("[(${attribute.name})]");

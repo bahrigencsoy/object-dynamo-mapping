@@ -9,7 +9,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import static com.example.lib.*;
 
 public class CacheResource implements Comparable<CacheResource>, java.io.Serializable {
-    private static final long serialVersionUID = -4607284148900335639L;
+    private static final long serialVersionUID = 9214598570906432776L;
 
     private final String key;
     private final byte[] data;
@@ -17,6 +17,7 @@ public class CacheResource implements Comparable<CacheResource>, java.io.Seriali
     private final Map<String, String> properties;
     private final Map<String, List<String>> extendedProperties;
     private final java.time.Instant creationTime;
+    private final List<String> relations;
 
     private transient DynamoDbClient _client;
     private transient String _tableName;
@@ -28,6 +29,7 @@ public class CacheResource implements Comparable<CacheResource>, java.io.Seriali
         this.properties = b.properties;
         this.extendedProperties = b.extendedProperties;
         this.creationTime = b.creationTime;
+        this.relations = b.relations;
     }
 
     public String key() {
@@ -52,6 +54,10 @@ public class CacheResource implements Comparable<CacheResource>, java.io.Seriali
 
     public java.time.Instant creationTime() {
         return creationTime;
+    }
+
+    public List<String> relations() {
+        return relations;
     }
 
     void _setClient(DynamoDbClient client) {
@@ -113,6 +119,11 @@ public class CacheResource implements Comparable<CacheResource>, java.io.Seriali
             mutators.add(mutator);
             return mutator;
         }
+        public StringListMutator<Mutator> relations() {
+            var mutator = new StringListMutator<Mutator>("associated_entities", this, _associated_entities__helper);
+            mutators.add(mutator);
+            return mutator;
+        }
 
         public CacheResource commit() {
             AtomicInteger counter = new AtomicInteger();
@@ -167,6 +178,9 @@ public class CacheResource implements Comparable<CacheResource>, java.io.Seriali
             if (map.containsKey("creation_time")) {
                 builder.creationTime(CacheResource._creation_time__helper.extractFromMap(map));
             }
+            if (map.containsKey("associated_entities")) {
+                builder.relations(CacheResource._associated_entities__helper.extractFromMap(map));
+            }
 
             var obj = builder.build();
             obj._setClient(client);
@@ -190,12 +204,12 @@ public class CacheResource implements Comparable<CacheResource>, java.io.Seriali
         return Objects.equals(key, other.key) && Objects.equals(data, other.data)
                 && Objects.equals(uniqueId, other.uniqueId) && Objects.equals(properties, other.properties)
                 && Objects.equals(extendedProperties, other.extendedProperties)
-                && Objects.equals(creationTime, other.creationTime);
+                && Objects.equals(creationTime, other.creationTime) && Objects.equals(relations, other.relations);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(key, data, uniqueId, properties, extendedProperties, creationTime);
+        return Objects.hash(key, data, uniqueId, properties, extendedProperties, creationTime, relations);
     }
 
     @Override
@@ -234,9 +248,18 @@ public class CacheResource implements Comparable<CacheResource>, java.io.Seriali
         sb.append(", properties='").append(properties).append('\'');
         sb.append(", extendedProperties='").append(extendedProperties).append('\'');
         sb.append(", creationTime='").append(creationTime).append('\'');
+        sb.append(", relations='").append(relations).append('\'');
 
         sb.append('}');
         return sb.toString();
+    }
+
+    private Object writeReplace() {
+        return new lib._CacheResource_Proxy(this);
+    }
+
+    private void readObject(java.io.ObjectInputStream stream) throws java.io.InvalidObjectException {
+        throw new java.io.InvalidObjectException("Serialization of CacheResource requires proxy object");
     }
 
     static final lib.AttributeHelper<String> _cache_item_key__helper = new lib.StringAttributeHelper("cache_item_key");
@@ -249,6 +272,8 @@ public class CacheResource implements Comparable<CacheResource>, java.io.Seriali
             "cache_data_extended_props");
     static final lib.AttributeHelper<java.time.Instant> _creation_time__helper = new lib.InstantAttributeHelper(
             "creation_time");
+    static final lib.AttributeHelper<List<String>> _associated_entities__helper = new lib.StringListHelper(
+            "associated_entities");
 
     public static Builder builder() {
         return new Builder();
@@ -262,6 +287,7 @@ public class CacheResource implements Comparable<CacheResource>, java.io.Seriali
         private Map<String, String> properties;
         private Map<String, List<String>> extendedProperties;
         private java.time.Instant creationTime;
+        private List<String> relations;
 
         private Builder() {
         }
@@ -288,6 +314,10 @@ public class CacheResource implements Comparable<CacheResource>, java.io.Seriali
         }
         public Builder creationTime(java.time.Instant creationTime) {
             this.creationTime = creationTime;
+            return this;
+        }
+        public Builder relations(List<String> relations) {
+            this.relations = relations;
             return this;
         }
 

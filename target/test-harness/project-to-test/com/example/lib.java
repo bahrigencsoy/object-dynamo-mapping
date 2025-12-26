@@ -184,6 +184,30 @@ class lib {
         }
     }
 
+    static class StringListHelper extends BaseAttributeHelper<List<String>> {
+
+        StringListHelper(String attributeName) {
+            super(attributeName);
+        }
+
+        @Override
+        public AttributeValue.Builder build(AttributeValue.Builder builder, List<String> value) {
+            List<AttributeValue> dynamoList = new ArrayList<>(value.size());
+            for (String e : value) {
+                dynamoList.add(AttributeValue.builder().s(e).build());
+            }
+            return builder.l(dynamoList);
+        }
+
+        @Override
+        public List<String> extract(AttributeValue value) {
+            if (value.hasL()) {
+                return value.l().stream().map(AttributeValue::s).toList();
+            }
+            return null;
+        }
+    }
+
     static class InstantAttributeHelper extends BaseAttributeHelper<java.time.Instant> {
         public InstantAttributeHelper(String attributeName) {
             super(attributeName);
@@ -359,6 +383,41 @@ class lib {
         }
     }
 
+    public static class StringListMutator<P> extends GenericMutator<List<String>, P> {
+
+        private final List<String> adds = new ArrayList<>();
+
+        StringListMutator(String attribute, P parent, AttributeHelper<List<String>> helper) {
+            super(attribute, parent, helper);
+        }
+
+        public P add(String value) {
+            adds.add(value);
+            return parent;
+        }
+
+        @Override
+        void appendUpdateExpression(AtomicInteger counter, List<String> setExpressions, List<String> removeExpressions,
+                List<String> conditionExpressions, Map<String, String> expressionAttributeNames,
+                Map<String, AttributeValue> expressionAttributeValues) {
+            super.appendUpdateExpression(counter, setExpressions, removeExpressions, conditionExpressions,
+                    expressionAttributeNames, expressionAttributeValues);
+
+            for (String entry : adds) {
+                int myCounter = counter.incrementAndGet();
+                int itemCounter = counter.incrementAndGet();
+                int emptyCounter = counter.incrementAndGet();
+
+                setExpressions.add(String.format("#sl%d = list_append(if_not_exists(#sl%d, :sle%d), :slv%d)", myCounter,
+                        myCounter, emptyCounter, itemCounter));
+                expressionAttributeNames.put("#sl" + myCounter, attribute);
+                expressionAttributeValues.put(":slv" + itemCounter,
+                        AttributeValue.builder().l(AttributeValue.builder().s(entry).build()).build());
+                expressionAttributeValues.put(":sle" + emptyCounter, AttributeValue.builder().l(List.of()).build());
+            }
+        }
+    }
+
     public static class GenericQuery<T, P> {
 
         private final String attribute;
@@ -501,4 +560,55 @@ class lib {
 
         return java.util.stream.StreamSupport.stream(spliterator, false);
     }
+
+    static class _GameScore_Proxy implements java.io.Serializable {
+        private static final long serialVersionUID = 1L;
+
+        private final String userId;
+        private final String gameTitle;
+        private final String gameGenre;
+        private final Integer totalScore;
+
+        _GameScore_Proxy(GameScore obj) {
+
+            this.userId = obj.userId();
+            this.gameTitle = obj.gameTitle();
+            this.gameGenre = obj.gameGenre();
+            this.totalScore = obj.totalScore();
+        }
+
+        private Object readResolve() {
+            return GameScore.builder().userId(userId).gameTitle(gameTitle).gameGenre(gameGenre).totalScore(totalScore)
+                    .build();
+        }
+    }
+
+    static class _CacheResource_Proxy implements java.io.Serializable {
+        private static final long serialVersionUID = 1L;
+
+        private final String key;
+        private final byte[] data;
+        private final String uniqueId;
+        private final Map<String, String> properties;
+        private final Map<String, List<String>> extendedProperties;
+        private final java.time.Instant creationTime;
+        private final List<String> relations;
+
+        _CacheResource_Proxy(CacheResource obj) {
+
+            this.key = obj.key();
+            this.data = obj.data();
+            this.uniqueId = obj.uniqueId();
+            this.properties = obj.properties();
+            this.extendedProperties = obj.extendedProperties();
+            this.creationTime = obj.creationTime();
+            this.relations = obj.relations();
+        }
+
+        private Object readResolve() {
+            return CacheResource.builder().key(key).data(data).uniqueId(uniqueId).properties(properties)
+                    .extendedProperties(extendedProperties).creationTime(creationTime).relations(relations).build();
+        }
+    }
+
 }

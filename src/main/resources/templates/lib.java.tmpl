@@ -184,6 +184,30 @@ class lib {
         }
     }
 
+    static class StringListHelper extends BaseAttributeHelper<List<String>> {
+
+        StringListHelper(String attributeName) {
+            super(attributeName);
+        }
+
+        @Override
+        public AttributeValue.Builder build(AttributeValue.Builder builder, List<String> value) {
+            List<AttributeValue> dynamoList = new ArrayList<>(value.size());
+            for (String e : value) {
+                dynamoList.add(AttributeValue.builder().s(e).build());
+            }
+            return builder.l(dynamoList);
+        }
+
+        @Override
+        public List<String> extract(AttributeValue value) {
+            if (value.hasL()) {
+                return value.l().stream().map(AttributeValue::s).toList();
+            }
+            return null;
+        }
+    }
+
      static class InstantAttributeHelper extends BaseAttributeHelper<java.time.Instant> {
          public InstantAttributeHelper(String attributeName) {
              super(attributeName);
@@ -350,6 +374,42 @@ class lib {
         }
     }
 
+    public static class StringListMutator<P> extends GenericMutator<List<String>, P> {
+
+        private final List<String> adds = new ArrayList<>();
+
+        StringListMutator(String attribute, P parent, AttributeHelper<List<String>> helper) {
+            super(attribute, parent, helper);
+        }
+
+        public P add(String value) {
+            adds.add(value);
+            return parent;
+        }
+
+        @Override
+        void appendUpdateExpression(AtomicInteger counter, List<String> setExpressions, List<String> removeExpressions,
+                                    List<String> conditionExpressions, Map<String, String> expressionAttributeNames,
+                                    Map<String, AttributeValue> expressionAttributeValues) {
+            super.appendUpdateExpression(counter, setExpressions, removeExpressions, conditionExpressions,
+                    expressionAttributeNames, expressionAttributeValues);
+
+            for (String entry : adds) {
+                int myCounter = counter.incrementAndGet();
+                int itemCounter = counter.incrementAndGet();
+                int emptyCounter = counter.incrementAndGet();
+
+                setExpressions.add(
+                        String.format("#sl%d = list_append(if_not_exists(#sl%d, :sle%d), :slv%d)",
+                                myCounter, myCounter, emptyCounter, itemCounter));
+                expressionAttributeNames.put("#sl" + myCounter, attribute);
+                expressionAttributeValues.put(":slv" + itemCounter, AttributeValue.builder().l(AttributeValue.builder().s(entry).build()).build());
+                expressionAttributeValues.put(":sle" + emptyCounter, AttributeValue.builder().l(List.of()).build());
+            }
+        }
+    }
+
+
     public static class GenericQuery<T, P> {
 
         private final String attribute;
@@ -485,4 +545,26 @@ class lib {
 
         return java.util.stream.StreamSupport.stream(spliterator, false);
     }
+
+[# th:each="table : ${project.tables}"]
+    static class _[(${table.javaClass})]_Proxy implements java.io.Serializable {
+        private static final long serialVersionUID = 1L;
+
+[# th:each="attribute : ${table.attributes}"]
+        private final [(${attribute.javaType})] [(${attribute.attribute})];
+[/]
+
+        _[(${table.javaClass})]_Proxy([(${table.javaClass})] obj) {
+        [# th:each="attribute : ${table.attributes}"]
+            this.[(${attribute.attribute})] = obj.[(${attribute.attribute})]();[/]
+        }
+
+        private Object readResolve() {
+            return [(${table.javaClass})].builder()[# th:each="attribute : ${table.attributes}"]
+                    .[(${attribute.attribute})]([(${attribute.attribute})])
+                    [/].build();
+        }
+    }
+
+[/]
 }

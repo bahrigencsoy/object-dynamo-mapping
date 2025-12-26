@@ -216,6 +216,14 @@ public class GameScore implements Comparable<GameScore>, java.io.Serializable {
         return sb.toString();
     }
 
+    private Object writeReplace() {
+        return new lib._GameScore_Proxy(this);
+    }
+
+    private void readObject(java.io.ObjectInputStream stream) throws java.io.InvalidObjectException {
+        throw new java.io.InvalidObjectException("Serialization of GameScore requires proxy object");
+    }
+
     static final lib.AttributeHelper<String> _user_id__helper = new lib.StringAttributeHelper("user_id");
     static final lib.AttributeHelper<String> _game_title__helper = new lib.StringAttributeHelper("game_title");
     static final lib.AttributeHelper<String> _game_genre__helper = new lib.StringAttributeHelper("game_genre");

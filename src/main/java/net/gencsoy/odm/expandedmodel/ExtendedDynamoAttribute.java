@@ -15,6 +15,7 @@ public class ExtendedDynamoAttribute extends DynamoAttribute {
                 case X_STRINGMAP -> "Map<String, String>";
                 case X_INSTANT -> "java.time.Instant";
                 case X_STRINGMULTIMAP -> "Map<String, List<String>>";
+                case X_STRINGLIST -> "List<String>";
             };
         } else {
             return superType;
@@ -44,6 +45,8 @@ public class ExtendedDynamoAttribute extends DynamoAttribute {
                 yield "InstantAttributeHelper";
             case X_STRINGMULTIMAP:
                 yield "StringMultimapHelper";
+            case X_STRINGLIST:
+                yield "StringListHelper";
         };
     }
 
@@ -55,6 +58,7 @@ public class ExtendedDynamoAttribute extends DynamoAttribute {
         return switch (getType()){
             case X_STRINGMAP -> "StringMapMutator<Mutator>";
             case X_STRINGMULTIMAP -> "StringMultimapMutator<Mutator>";
+            case X_STRINGLIST -> "StringListMutator<Mutator>";
             default -> "GenericMutator<%s, Mutator>".formatted(getJavaType());
         };
     }

@@ -114,6 +114,11 @@ public class Usage {
           "name": "creation_time",
           "type": "X_INSTANT",
           "attribute": "creationTime"
+        },
+        {
+          "name": "associated_entities",
+          "type": "X_STRINGLIST",
+          "attribute": "relations"
         }
       ],
       "primaryIndex": {

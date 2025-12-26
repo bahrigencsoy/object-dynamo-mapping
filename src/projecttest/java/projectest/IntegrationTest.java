@@ -41,6 +41,7 @@ public class IntegrationTest {
         test.step_107_scan_items();
         test.step_108_conditional_update();
         test.step_111_cache_item_tests();
+        test.step_112_list_test();
         test.step_201_raced_atomic_puts();
         test.step_300_query_by_global_secondary_index();
         test.step_301_query_by_local_secondary_index();
@@ -132,7 +133,7 @@ public class IntegrationTest {
     }
 
     void step_111_cache_item_tests() {
-        var cache = em.putCacheResource("a", new byte[]{1, 2, 3}, null, Map.of("a", "x", "b", "y"), null, Instant.now(), false);
+        var cache = em.putCacheResource("a", new byte[]{1, 2, 3}, null, Map.of("a", "x", "b", "y"), null, Instant.now(), null ,false);
         cache = em.findCacheResource("a").get();
         assertArrayEquals(new byte[]{1, 2, 3}, cache.data());
         assertEquals(Map.of("b", "y", "a", "x"), cache.properties());
@@ -148,6 +149,17 @@ public class IntegrationTest {
         assertNull(cache.uniqueId());
         cache.mutator().properties().put("klm", "qrs").commit();
         assertEquals("qrs", em.findCacheResource("xyz").get().properties().get("klm"));
+        cache.mutator().delete();
+    }
+
+    void step_112_list_test() {
+        var cache = em.putCacheResource("list", new byte[]{1, 2, 3}, null, Map.of("a", "x", "b", "y"), null, Instant.now(), null ,false);
+        cache = em.findCacheResource("list").get();
+        assertNull(cache.relations());
+        cache.mutator().relations().add("ooo").commit();
+        assertEquals(List.of("ooo"), em.findCacheResource("list").get().relations());
+        cache.mutator().relations().setValue(List.of("10", "20", "40")).commit();
+        assertEquals(List.of("10", "20", "40"), em.findCacheResource("list").get().relations());
         cache.mutator().delete();
     }
 
@@ -210,12 +222,12 @@ public class IntegrationTest {
 
     void step_300_query_by_global_secondary_index() {
         assertEquals(0, em.scanAllCacheResource().count());
-        em.putCacheResource("key", new byte[]{1, 2, 3}, "uniq1", Map.of(), Map.of(), Instant.now(), true);
+        em.putCacheResource("key", new byte[]{1, 2, 3}, "uniq1", Map.of(), Map.of(), Instant.now(), null ,true);
         assertEquals(1, em.queryCacheResourceByUniqueId("uniq1").execute().count());
         CacheResource resource = em.queryCacheResourceByUniqueId("uniq1").execute().findFirst().get();
         assertArrayEquals(new byte[]{1, 2, 3}, resource.data());
-        em.putCacheResource("key2", new byte[]{4, 5, 6}, "uniq1", Map.of(), Map.of(), Instant.now(), true);
-        em.putCacheResource("key3", new byte[]{7, 8, 9}, "uniq2", Map.of(), Map.of(), null, true);
+        em.putCacheResource("key2", new byte[]{4, 5, 6}, "uniq1", Map.of(), Map.of(), Instant.now(), null ,true);
+        em.putCacheResource("key3", new byte[]{7, 8, 9}, "uniq2", Map.of(), Map.of(), null, List.of(), true);
         assertEquals(2, em.queryCacheResourceByUniqueId("uniq1").execute().count());
         assertThrows(DynamoDbException.class, () -> em.queryCacheResourceByUniqueId("uniq1").uniqueId().ne("uniq1").execute());
         assertArrayEquals(new byte[]{7, 8, 9}, em.queryCacheResourceByKey("key3").uniqueId().ne("x").execute().findFirst().get().data());
