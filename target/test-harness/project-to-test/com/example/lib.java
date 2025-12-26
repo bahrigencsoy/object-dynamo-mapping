@@ -3,6 +3,9 @@ package com.example;
 import software.amazon.awssdk.core.SdkBytes;
 import software.amazon.awssdk.services.dynamodb.model.*;
 
+import java.io.FileOutputStream;
+import java.io.ObjectOutputStream;
+import java.time.Instant;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
@@ -562,6 +565,7 @@ class lib {
     }
 
     static class _GameScore_Proxy implements java.io.Serializable {
+        @java.io.Serial
         private static final long serialVersionUID = 1L;
 
         private final String userId;
@@ -577,6 +581,7 @@ class lib {
             this.totalScore = obj.totalScore();
         }
 
+        @java.io.Serial
         private Object readResolve() {
             return GameScore.builder().userId(userId).gameTitle(gameTitle).gameGenre(gameGenre).totalScore(totalScore)
                     .build();
@@ -584,13 +589,13 @@ class lib {
     }
 
     static class _CacheResource_Proxy implements java.io.Serializable {
+        @java.io.Serial
         private static final long serialVersionUID = 1L;
 
         private final String key;
         private final byte[] data;
         private final String uniqueId;
-        private final Map<String, String> properties;
-        private final Map<String, List<String>> extendedProperties;
+        private final String toBeRemoved;
         private final java.time.Instant creationTime;
         private final List<String> relations;
 
@@ -599,16 +604,34 @@ class lib {
             this.key = obj.key();
             this.data = obj.data();
             this.uniqueId = obj.uniqueId();
-            this.properties = obj.properties();
-            this.extendedProperties = obj.extendedProperties();
+            this.toBeRemoved = obj.uniqueId()+"to be removed";
             this.creationTime = obj.creationTime();
             this.relations = obj.relations();
         }
 
+        @java.io.Serial
         private Object readResolve() {
-            return CacheResource.builder().key(key).data(data).uniqueId(uniqueId).properties(properties)
-                    .extendedProperties(extendedProperties).creationTime(creationTime).relations(relations).build();
+            return CacheResource.builder().key(key).data(data).uniqueId(uniqueId)
+                    .creationTime(creationTime).relations(relations).build();
         }
+    }
+
+    public static void main(String[] args) throws Exception {
+        CacheResource resource1 = CacheResource.builder().uniqueId("serial1").key("key1").build();
+        CacheResource resource2 = CacheResource.builder().uniqueId("serial2").key("key2").creationTime(Instant.now()).build();
+
+        GameScoreEntityManager em = new GameScoreEntityManager(null, "aaa");
+
+        ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream("test-serialize.bin"));
+        em.serializeCacheResource(oos, List.of(resource1, resource2).stream());
+
+        GameScore score1 = GameScore.builder().build();
+        GameScore score2 = GameScore.builder().userId("serial4").build();
+
+        em.serializeGameScore(oos, List.of(score1, score2).stream());
+
+        oos.flush();
+        oos.close();
     }
 
 }
